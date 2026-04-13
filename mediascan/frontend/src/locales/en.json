@@ -1,0 +1,610 @@
+{
+  "sidebar": {
+    "dashboard": "Dashboard",
+    "new_scan": "New Scan",
+    "history": "History",
+    "ml_analysis": "ML Analysis",
+    "profile": "Profile",
+    "admin": "Admin"
+  },
+  "header": {
+    "welcome": "Welcome",
+    "medical_member": "Medical Member",
+    "administrator": "Administrator"
+  },
+  "dashboard": {
+    "welcome_back": "Welcome Back",
+    "subtitle": "Monitor your health trajectory and AI diagnostics in real-time.",
+    "total_scans": "Total Scans",
+    "anemia_cases": "Anemia Cases",
+    "diabetes_signs": "Diabetes Signs",
+    "healthy_cases": "Healthy Cases",
+    "diagnostic_trends": "Diagnostic Trends",
+    "dfu_risk": "DFU Risk",
+    "detection_overview": "Detection Overview",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "start_new_scan": "Start New Scan",
+    "upload_desc": "Upload forensic medical imaging",
+    "recent_activity": "Recent Activity",
+    "expand_all": "Expand All",
+    "risk": "RISK",
+    "risk_profile": "Clinical Risk Profile",
+    "based_on_scans": "Based on last 10 scans",
+    "anemia_risk": "Anemia Risk",
+    "diabetes_risk": "Diabetes Risk",
+    "risk_high": "HIGH",
+    "risk_medium": "MEDIUM",
+    "risk_low": "LOW",
+    "syncing": "Synchronizing clinical intelligence..."
+  },
+  "scan": {
+    "heading": "New Diagnostic Scan",
+    "subtitle": "Execute high-fidelity AI diagnostics by uploading clinical medical imaging.",
+    "upload_title": "Diagnostic Image Upload",
+    "source_upload": "Source Image Upload",
+    "drop_desc": "Drop clinical scan or browse local records",
+    "intelligence_selection": "Intelligence Selection",
+    "initialize_scan": "Initialize Neural Scan",
+    "analyzing": "Analyzing Diagnostic Patterns...",
+    "analysis_complete": "Analysis Complete — Syncing Neural Results",
+    "ai_detected": "AI Identified Domain",
+    "disclaimer_title": "Clinical Disclaimer",
+    "disclaimer_text": "AI diagnostics are provided for research purposes only. Results must be validated by a licensed physician before clinical decision-making.",
+    "models": {
+      "auto": "AI Auto-Detect",
+      "auto_desc": "Neural engine identifies body part automatically",
+      "eye": "Anemia Eye Model",
+      "eye_desc": "Detect anemia clinical signs in conjunctiva",
+      "palm": "Anemia Skin Model",
+      "palm_desc": "Analyze palmar creases for anemia",
+      "retina": "Retina Diabetes Model",
+      "retina_desc": "Detect diabetic retinopathy patterns",
+      "skin": "Diabetes Skin Model",
+      "skin_desc": "Analyze diabetic foot ulcer risk zones"
+    }
+  },
+  "history": {
+    "heading": "Clinical Archive",
+    "subtitle": "Retrieving secure diagnostic history and neural inference records.",
+    "search_placeholder": "Search patient ID or clinical markers...",
+    "filter_all": "All Diagnostics",
+    "view_results": "View Results",
+    "empty": "No clinical records matching your criteria were found in the secure archive.",
+    "table": {
+      "patient_id": "Patient Identifier",
+      "type": "Case Type",
+      "result": "Diagnostic Result",
+      "risk": "Risk Level",
+      "date": "Execution Date",
+      "actions": "Actions"
+    }
+  },
+  "profile": {
+    "heading": "Account Identity",
+    "subtitle": "Manage your clinical credentials and system-wide diagnostic preferences.",
+    "role_admin": "System Administrator",
+    "role_practitioner": "Verified Clinical Practitioner",
+    "full_name": "Full Display Name",
+    "email": "Verified Email Address",
+    "role": "Clinical Role",
+    "access": "ACCESS",
+    "uuid": "Account Reference UUID",
+    "capabilities": "Platform Capabilities",
+    "stats_scans": "Scans Run",
+    "stats_accuracy": "Accuracy Index",
+    "security_metrics": "Security Metrics",
+    "2fa_status": "2FA Status",
+    "active": "ACTIVE",
+    "credentials_reset": "Credentials Reset",
+    "days_ago": "14 DAYS AGO",
+    "cap_diagnostic": "Neural Diagnostic Execution",
+    "cap_diagnostic_desc": "Permission to run high-fidelity scan forensics",
+    "cap_archival": "Archival Retrieval",
+    "cap_archival_desc": "Secure access to patient diagnostic history",
+    "cap_analytics": "Model Performance Analytics",
+    "cap_analytics_desc": "Viewing specialized neural calibration metrics"
+  },
+  "auth": {
+    "login_title": "Clinic Intelligence Portal",
+    "login_subtitle": "Securely access the MediScan AI diagnostic environment.",
+    "signup_title": "Practitioner Registration",
+    "signup_subtitle": "Create your clinical account to access advanced AI diagnostics.",
+    "email": "Professional Email Address",
+    "password": "Secure Password",
+    "name": "Full Clinical Name",
+    "login_btn": "Sign In to Portal",
+    "signup_btn": "Create Account",
+    "no_account": "Don't have an account?",
+    "have_account": "Already have an account?",
+    "register": "Register Now",
+    "welcome_back_toast": "Welcome back!",
+    "login_failed": "Login failed",
+    "hero_title_1": "Your Health,",
+    "hero_title_2": "Analyzed.",
+    "hero_title_3": "Early.",
+    "hero_subtitle": "Upload a photo of your eye, palm, or skin — our AI detects signs of Anemia and Diabetes in seconds.",
+    "feat_1_title": "4 AI Models",
+    "feat_1_desc": "Eye, palm, retina & skin",
+    "feat_2_title": "Private & Secure",
+    "feat_2_desc": "Images never shared",
+    "feat_3_title": "Instant Report",
+    "feat_3_desc": "Download PDF report",
+    "testimonial_text": "I uploaded a photo of my eye and got results in 10 seconds. It detected my anemia before my blood test confirmed it.",
+    "testimonial_author": "Rahul S., Mumbai",
+    "verified_user": "Verified User",
+    "password_placeholder": "Enter your password",
+    "forgot_password": "Forgot password?",
+    "signing_in": "Signing in...",
+    "encrypted": "🔒 256-bit encrypted",
+    "privacy_safe": "No data sold",
+    "signup_hero_title_1": "Start Your Health",
+    "signup_hero_title_2": "Journey Today.",
+    "signup_hero_subtitle": "Join thousands of people monitoring their metabolic health using our advanced multi-modal AI diagnostics.",
+    "feat_anemia": "AI-powered Anemia Detection",
+    "feat_retinopathy": "Diabetic Retinopathy Screening",
+    "feat_ulcer": "Foot Ulcer Early Warning",
+    "terms_agreement": "By creating an account, you agree to our Terms of Service.",
+    "age": "Age",
+    "gender": "Gender",
+    "phone_number": "Phone Number",
+    "optional": "Optional",
+    "confirm_password": "Confirm Password",
+    "creating_account": "Creating Account...",
+    "create_account_btn": "Create My Account",
+    "password_min": "Min 6 characters",
+    "password_repeat": "Repeat your password",
+    "gender_male": "Male",
+    "gender_female": "Female",
+    "gender_other": "Prefer not to say",
+    "weak": "Weak",
+    "fair": "Fair",
+    "strong": "Strong",
+    "signup_success": "Account Created! Please log in with your credentials.",
+    "passwords_mismatch": "Passwords do not match"
+  },
+  "ml": {
+    "heading": "Neural Performance & Analysis",
+    "subtitle": "Monitor the clinical performance and neural attention of your specialized AI models.",
+    "eye_model": "👁 Anemia Eye Model",
+    "palm_model": "🖐 Anemia Skin Model",
+    "retina_model": "🔬 Retina Diabetes Model",
+    "skin_model": "🦶 Diabetes Skin Model",
+    "accuracy": "Accuracy",
+    "precision": "Precision",
+    "recall": "Recall",
+    "f1score": "F1-Score",
+    "auc": "AUC",
+    "accuracy_desc": "% of total predictions that were correct",
+    "precision_desc": "% of positive predictions that were actually positive",
+    "recall_desc": "% of actual positives correctly identified",
+    "f1score_desc": "Harmonic mean of Precision and Recall",
+    "auc_desc": "Area Under the ROC Curve — model's ability to distinguish classes",
+    "training_history": "Clinical Training History",
+    "prediction_matrix": "Prediction Matrix",
+    "predicted_model": "PREDICTED MODEL →",
+    "actual_labels": "ACTUAL LABELS ↓",
+    "true_negative": "TRUE NEGATIVE",
+    "false_positive": "FALSE POSITIVE",
+    "false_negative": "FALSE NEGATIVE",
+    "true_positive": "TRUE POSITIVE",
+    "roc_analysis": "ROC Curve Threshold Analysis",
+    "roc_subtitle": "Diagnostic ability of the binary classifier system",
+    "performance_index": "Total Performance Index (AUC)",
+    "train_images": "train images",
+    "val_images": "val images",
+    "epochs": "epochs",
+    "comparison_matrix": "Model Comparison Matrix",
+    "diag_intel": "Diagnostic Intelligence",
+    "heatmap_title": "AI Heatmap Analysis",
+    "heatmap_subtitle": "Upload an image to see exactly which clusters triggered the AI diagnostic sequence.",
+    "gradcam_overview": "Neural Mapping Complexity: GradCAM Overview",
+    "gradcam_desc": "GradCAM (Gradient-weighted Class Activation Mapping) highlights the regions of your image that the AI model focused on most when making its prediction.",
+    "red_clusters": "Red Clusters",
+    "red_desc": "represent highest activation markers",
+    "blue_regions": "Blue Regions",
+    "blue_desc": "represent ambient, non-diagnostic space",
+    "forensic_upload": "Forensic Image Upload",
+    "drop_medical": "Drop medical-grade image or browse disk",
+    "model_select": "Neural Model Select",
+    "generating_heatmap": "Computing Neural Heatmap...",
+    "generate_heatmap": "Generate Forensic Heatmap",
+    "awaiting_diag": "Neural Canvas Awaiting Diagnostics",
+    "awaiting_desc": "Upload medical forensic scan to initialize high-fidelity neural mapping.",
+    "raw_forensics": "Raw Forensics",
+    "activation_heatmap": "Neural Activation Heatmap",
+    "low_attention": "Low Attention",
+    "critical_focus": "Critical Focus",
+    "diag_inference": "Diagnostic Inference",
+    "certainty": "Certainty",
+    "identified": "Identified",
+    "export_analysis": "Export Analysis"
+  },
+  "results": {
+    "scan_report": "Health Analysis Report",
+    "back_to_history": "Back to History",
+    "download_report": "Download Report",
+    "delete_record": "Delete Record",
+    "overall_health_score": "OVERALL HEALTH SCORE",
+    "out_of_100": "out of 100",
+    "health_improved": "Your health score improved by {{points}} points since your last scan on {{date}}",
+    "health_declined": "Your health score declined by {{points}} points since your last scan on {{date}}",
+    "diagnostic_archives": "Diagnostic Archives",
+    "ai_heatmap": "AI HEATMAP (GRADCAM)",
+    "scan_image": "SCAN IMAGE",
+    "results_summary": "Results Summary",
+    "anemia_result": "ANEMIA RESULT",
+    "diabetes_result": "DIABETES RESULT",
+    "confidence": "CONFIDENCE",
+    "scan_date": "SCAN DATE",
+    "images_analyzed": "IMAGES ANALYZED",
+    "how_ai_decided": "How the AI Decided",
+    "ai_interpretation": "AI Interpretation",
+    "medical_recommendations": "Medical Recommendations",
+    "clinical_guidance": "Critical Medical Actions & Clinical Guidance",
+    "lifestyle_preventive": "Nutritional & Preventive Lifestyle Remedies",
+    "diet": "Dietary Guidelines",
+    "supplements": "Medical Supplements",
+    "lifestyle": "Lifestyle & Activity",
+    "precautions": "Safety Precautions",
+    "status": {
+      "anemic": "Anemic",
+      "non_anemic": "Non-Anemic",
+      "diabetic": "Diabetic",
+      "non_diabetic": "Non-Diabetic",
+      "abnormal_ulcer": "Abnormal(Ulcer)",
+      "not_scanned": "Not Scanned",
+      "normal": "Normal"
+    },
+    "risk_levels": {
+      "high": "HIGH RISK",
+      "medium": "MEDIUM RISK",
+      "low": "LOW RISK",
+      "none": "N/A"
+    },
+    "remedies": {
+      "anemia": {
+        "low": {
+          "diet": [
+            "Eat iron-rich foods: spinach, lentils, beans, tofu",
+            "Include Vitamin C with every meal — lemon juice, oranges, guava",
+            "Add beetroot and pomegranate to your daily diet",
+            "Consume dates, raisins, and figs as snacks",
+            "Include fortified cereals and whole grains",
+            "Eat dark leafy greens: methi, palak, drumstick leaves"
+          ],
+          "supplements": [
+            "Iron supplements only if prescribed by doctor",
+            "Vitamin B12 — found in eggs, milk, paneer",
+            "Folate-rich foods: broccoli, avocado, peas",
+            "Vitamin C supplement 500mg can enhance iron absorption",
+            "Multivitamin with iron — consult pharmacist"
+          ],
+          "lifestyle": [
+            "Get 7-8 hours of sleep every night",
+            "Light walking 20-30 minutes daily",
+            "Avoid strenuous exercise until levels improve",
+            "Stay hydrated — drink 2-3 liters of water daily",
+            "Manage stress with yoga or meditation"
+          ],
+          "precautions": [
+            "Avoid tea and coffee immediately after meals — blocks iron absorption",
+            "Do not self-medicate with iron supplements without blood test",
+            "Get CBC blood test to confirm anemia diagnosis",
+            "Monitor symptoms: fatigue, dizziness, pale skin",
+            "Cook in iron cookware to increase dietary iron"
+          ]
+        },
+        "medium": {
+          "diet": [
+            "Significantly increase iron intake — red meat, chicken liver, oysters",
+            "Eat iron-rich vegetarian foods 3x daily: rajma, chana, soya",
+            "Pair every iron-rich meal with Vitamin C source",
+            "Drink beetroot-carrot juice daily",
+            "Include moringa (drumstick) leaves in meals",
+            "Avoid calcium-rich foods alongside iron-rich foods"
+          ],
+          "supplements": [
+            "Ferrous sulfate 325mg — only with doctor's prescription",
+            "Vitamin B12 injection if deficiency confirmed",
+            "Folic acid 400-800 mcg daily as advised",
+            "Iron + Vitamin C combination tablets",
+            "Get CBC test before starting any supplement"
+          ],
+          "lifestyle": [
+            "Rest adequately — avoid overexertion",
+            "Gentle yoga: Pranayama, Shavasana for energy",
+            "Short walks only — avoid high intensity exercise",
+            "Elevate feet when resting to improve circulation",
+            "Track energy levels and fatigue daily"
+          ],
+          "precautions": [
+            "Consult a hematologist within 2 weeks",
+            "Do not delay CBC blood test — confirm diagnosis",
+            "Watch for symptoms: severe fatigue, breathlessness, rapid heartbeat",
+            "Avoid aspirin and NSAIDs — can worsen bleeding",
+            "Avoid alcohol completely during recovery",
+            "Iron supplements can cause constipation — increase fiber"
+          ]
+        },
+        "high": {
+          "diet": [
+            "Start iron-rich medical diet immediately under dietitian guidance",
+            "Organ meats daily if non-vegetarian: liver, kidney",
+            "Fortified foods: iron-fortified milk, cereals, bread",
+            "Small frequent meals — 5-6 times a day",
+            "Smoothies with spinach, beetroot, dates, banana",
+            "Avoid foods that block iron: tea, coffee, dairy with meals"
+          ],
+          "supplements": [
+            "⚠️ URGENT: See doctor immediately for iron infusion evaluation",
+            "Prescription iron therapy — oral or IV as prescribed",
+            "B12 injections if pernicious anemia suspected",
+            "Erythropoietin therapy if recommended by specialist",
+            "Do not self-treat — this level requires medical supervision"
+          ],
+          "lifestyle": [
+            "Strict rest — minimize physical activity",
+            "No strenuous exercise until hemoglobin improves",
+            "Breathing exercises only — Anulom Vilom, deep breathing",
+            "Sleep 9-10 hours per day",
+            "Use wheelchair or support if severe dizziness occurs"
+          ],
+          "precautions": [
+            "🚨 Seek immediate medical attention — high risk anemia",
+            "Blood transfusion may be needed — consult hematologist",
+            "Do not drive or operate machinery",
+            "Monitor hemoglobin weekly with blood tests",
+            "Emergency symptoms: fainting, severe breathlessness — go to ER",
+            "Avoid all blood-thinning medications without doctor approval"
+          ]
+        }
+      },
+      "diabetes": {
+        "low": {
+          "diet": [
+            "Follow low glycemic index (GI) diet",
+            "Eat whole grains: brown rice, oats, barley, millet",
+            "Include fenugreek seeds (methi) daily — reduces blood sugar",
+            "Bitter gourd (karela) juice in the morning",
+            "Avoid white rice, maida, sugary drinks, sweets",
+            "Eat small meals every 3-4 hours to maintain stable glucose"
+          ],
+          "supplements": [
+            "Chromium — helps insulin sensitivity",
+            "Magnesium — found in nuts, seeds, dark chocolate",
+            "Berberine supplement — consult doctor before use",
+            "Vitamin D3 — deficiency worsens insulin resistance",
+            "Cinnamon capsules — may help lower fasting glucose"
+          ],
+          "lifestyle": [
+            "Walk 30 minutes after each meal — most effective habit",
+            "Strength training 3x per week improves insulin sensitivity",
+            "Monitor fasting blood sugar every morning",
+            "Reduce screen time and sedentary behavior",
+            "Practice stress management — cortisol raises blood sugar"
+          ],
+          "precautions": [
+            "Get HbA1c test to confirm prediabetes or diabetes",
+            "Schedule annual eye exam for early retinopathy",
+            "Check feet daily for sores or numbness",
+            "Maintain healthy weight — even 5% reduction helps significantly",
+            "Avoid smoking — dramatically increases diabetes complications"
+          ]
+        },
+        "medium": {
+          "diet": [
+            "Strict diabetic diet — consult registered dietitian",
+            "Carbohydrate counting — limit to 45-60g per meal",
+            "No sugar, no refined carbs, no fruit juices",
+            "High fiber diet: psyllium husk, vegetables, legumes",
+            "Jamun seeds powder — traditional blood sugar remedy",
+            "Eat at fixed times every day — avoid skipping meals"
+          ],
+          "supplements": [
+            "Metformin or other medications — only as prescribed",
+            "Alpha-lipoic acid for nerve protection",
+            "CoQ10 — supports heart health in diabetics",
+            "Omega-3 fatty acids — fish oil or flaxseed",
+            "B-complex vitamins — prevent diabetic neuropathy"
+          ],
+          "lifestyle": [
+            "Daily 45-minute brisk walk — non-negotiable",
+            "Self-monitoring blood glucose (SMBG) 2-4 times daily",
+            "Keep a food and glucose diary",
+            "Quit smoking and alcohol immediately",
+            "Annual kidney function test (creatinine, eGFR)"
+          ],
+          "precautions": [
+            "Consult endocrinologist within 1 week",
+            "Get HbA1c test every 3 months",
+            "Check blood pressure regularly — target <130/80",
+            "Foot care: wash, dry, moisturize daily — inspect for wounds",
+            "Carry glucose tablets for hypoglycemia episodes",
+            "Never skip meals if on insulin or sulfonylureas"
+          ]
+        },
+        "high": {
+          "diet": [
+            "Medical nutrition therapy — only follow dietitian's plan",
+            "Very low carbohydrate diet under medical supervision",
+            "Strictly avoid all forms of sugar and simple carbs",
+            "High protein, moderate fat, very low carb meals",
+            "Frequent small meals — never fast for long periods",
+            "Adequate hydration — 3+ liters water daily"
+          ],
+          "supplements": [
+            "🚨 Insulin therapy likely needed — see endocrinologist immediately",
+            "Prescribed diabetes medications — strict adherence",
+            "Neuropathy supplements: B1, B6, B12 as prescribed",
+            "ACE inhibitors for kidney protection if prescribed",
+            "Do not stop or change medications without doctor approval"
+          ],
+          "lifestyle": [
+            "Medical supervision required for all exercise",
+            "Daily blood glucose monitoring — multiple times",
+            "HbA1c target: below 7% — work with doctor",
+            "Annual dilated eye exam — retinopathy risk is high",
+            "Podiatrist visit every 3-6 months for foot health"
+          ],
+          "precautions": [
+            "🚨 Immediate medical consultation required",
+            "Risk of diabetic ketoacidosis (DKA) — know the symptoms",
+            "Emergency signs: extreme thirst, confusion, vomiting — go to ER",
+            "Never skip insulin doses if prescribed",
+            "Wear diabetic footwear at all times",
+            "Carry medical ID identifying you as diabetic"
+          ]
+        }
+      },
+      "dfu": {
+        "low": {
+          "diet": [
+            "Protein-rich diet to promote wound healing: eggs, fish, legumes",
+            "Zinc-rich foods: pumpkin seeds, beef, chickpeas",
+            "Vitamin C for collagen synthesis: citrus fruits, bell peppers",
+            "Vitamin A for skin healing: sweet potato, carrots",
+            "Stay well hydrated — aids tissue repair",
+            "Anti-inflammatory foods: turmeric, ginger, omega-3"
+          ],
+          "supplements": [
+            "Zinc 25-40mg daily — promotes wound healing",
+            "Vitamin C 500-1000mg daily",
+            "Vitamin E — topical and oral for skin repair",
+            "Collagen peptides supplement — aids tissue healing",
+            "Omega-3 fatty acids — reduces inflammation"
+          ],
+          "lifestyle": [
+            "Inspect feet daily with a mirror — check between toes",
+            "Keep feet clean and dry — wash with mild soap, pat dry",
+            "Moisturize feet daily — avoid applying between toes",
+            "Wear proper fitting diabetic socks and shoes",
+            "Elevate feet when sitting to improve circulation"
+          ],
+          "precautions": [
+            "Never walk barefoot — even indoors",
+            "Do not pop blisters or cut corns yourself",
+            "Trim toenails straight across — never curved",
+            "See podiatrist immediately if wound appears",
+            "Control blood sugar — high glucose slows healing"
+          ]
+        },
+        "medium": {
+          "diet": [
+            "High protein diet: 1.2-1.5g per kg body weight daily",
+            "Wound healing smoothie: protein powder + berries + spinach",
+            "Avoid sugar completely — impairs immune response",
+            "Bone broth — collagen and minerals for tissue repair",
+            "Iron-rich foods — prevents anemia which slows healing"
+          ],
+          "supplements": [
+            "⚠️ Medical wound dressings only — no home remedies on wound",
+            "Prescribed antibiotics if infection present — complete full course",
+            "Zinc + Vitamin C + Vitamin E combination",
+            "L-Arginine supplement — improves blood flow to wound",
+            "Consult wound care specialist for dressing protocol"
+          ],
+          "lifestyle": [
+            "Offloading: use crutches, wheelchair, or special boot to keep weight off wound",
+            "Daily wound inspection — photograph and track healing progress",
+            "Keep wound covered with clean dressing at all times",
+            "Quit smoking immediately — dramatically impairs wound healing",
+            "Manage blood glucose aggressively — target HbA1c below 7%"
+          ],
+          "precautions": [
+            "See podiatrist or wound care specialist within 3 days",
+            "Watch for infection signs: increasing redness, warmth, pus, fever",
+            "Do not use antiseptics like Dettol directly on wound",
+            "Avoid tight shoes, socks, or anything that restricts blood flow",
+            "Hospital admission may be needed if infection spreads",
+            "Never delay treatment — DFU can worsen rapidly"
+          ]
+        },
+        "high": {
+          "diet": [
+            "Hospital-level nutrition support likely needed",
+            "High calorie, high protein diet: 35 kcal/kg, 1.5g protein/kg",
+            "Enteral nutrition if oral intake is insufficient",
+            "Strict blood sugar control through diet and medication",
+            "No alcohol — severely impairs wound healing and immunity"
+          ],
+          "supplements": [
+            "🚨 Immediate hospitalization may be required",
+            "IV antibiotics for deep infection",
+            "Surgical debridement may be needed",
+            "Negative pressure wound therapy (NPWT) consideration",
+            "Hyperbaric oxygen therapy (HBOT) for chronic ulcers"
+          ],
+          "lifestyle": [
+            "Bed rest likely required — strict pressure relief",
+            "Professional wound care multiple times weekly",
+            "Daily monitoring of vitals (temp, heart rate, BP)",
+            "Strict insulin management — IV insulin may be needed",
+            "Complete immobilization of affected limb if instructed"
+          ],
+          "precautions": [
+            "🚨 CRITICAL: Risk of limb loss — surgical intervention needed",
+            "Sepsis awareness: fever, chills, rapid heartbeat — Emergency",
+            "Osteomyelitis (bone infection) screening required",
+            "Frequent vascular assessment (Doppler/ABI)",
+            "Do not touch wound or change surgical dressing without sterile prep",
+            "Immediate ER visit if wound foul-smelling or black (necrosis)"
+          ]
+        }
+      }
+    },
+    "analysis_explanations": {
+      "eye_anemia": "The AI examined the color of your inner eyelid (conjunctiva). Healthy conjunctiva is pink-red due to good blood flow. Pale or white conjunctiva suggests low hemoglobin — a key sign of anemia. Our model identified pallor patterns in this region.",
+      "palm_anemia": "The AI analyzed the skin color and texture of your palm. A healthy palm has pink coloration from blood flow through capillaries. Pale or yellowish palms indicate reduced red blood cells — a sign of anemia. The model detected reduced erythema in your palm.",
+      "retina_diabetes": "The AI examined your retinal (fundus) image for signs of diabetic retinopathy. It looked for microaneurysms (tiny bulges in blood vessels), hemorrhages, and abnormal new vessel growth — all early signs of diabetes affecting the eyes.",
+      "skin_dfu": "The AI analyzed your skin/foot wound image for Diabetic Foot Ulcer markers. It identified wound margin characteristics, tissue coloration patterns, and signs of poor healing typically associated with diabetic foot complications.",
+      "summary_desc": "Our AI detected signs of {{diagnosis}} in your {{type}} image. Your risk level is assessed as {{risk}}."
+    },
+    "action_plan": {
+      "title": "Your Action Plan",
+      "subtitle": "Follow these steps based on your results",
+      "steps": {
+        "save_report": {
+          "title": "Save this report",
+          "desc": "Download your PDF report and save it for your doctor's appointment."
+        },
+        "see_doctor": {
+          "title": "See a doctor immediately",
+          "desc": "Your results show high risk indicators. Please visit a hospital or clinic today."
+        },
+        "cbc_test": {
+          "title": "Get a CBC blood test",
+          "desc": "A Complete Blood Count test will confirm anemia and measure your hemoglobin level. Available at any diagnostic lab."
+        },
+        "hba1c_test": {
+          "title": "Get an HbA1c blood test",
+          "desc": "This test measures your average blood sugar over 3 months. Available at any lab without fasting."
+        },
+        "visit_podiatrist": {
+          "title": "Visit a podiatrist",
+          "desc": "A foot specialist (podiatrist) can assess the wound, provide dressing, and create a treatment plan."
+        },
+        "follow_up": {
+          "title": "Schedule a follow-up scan",
+          "desc": "After treatment or lifestyle changes, run another MediScan analysis to track your progress."
+        }
+      },
+      "times": {
+        "today": "Today",
+        "this_week": "This week",
+        "within_2_weeks": "Within 2 weeks",
+        "this_month": "This month",
+        "within_3_days": "Within 3 days",
+        "in_4_6_weeks": "In 4-6 weeks"
+      },
+      "urgent": "URGENT"
+    },
+    "remedies_header": "Remedies & Precautions",
+    "consult_doctor_warning": "Always consult a doctor before making health decisions",
+    "no_risks_detected": "No Risks Detected",
+    "eye_analysis": "Eye Analysis",
+    "palm_analysis": "Palm Analysis",
+    "retina_analysis": "Retina Analysis",
+    "foot_analysis": "Foot Analysis"
+  }
+}

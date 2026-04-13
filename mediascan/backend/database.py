@@ -1,0 +1,242 @@
+"""
+SQLAlchemy Models for MediScan AI
+Integrated with Supabase (PostgreSQL)
+"""
+
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
+import json
+from werkzeug.security import generate_password_hash
+
+from sqlalchemy import text
+
+db = SQLAlchemy()
+
+class User(db.Model):
+    __tablename__ = 'users'
+    
+    id = db.Column(db.Integer, db.Identity(), primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    email = db.Column(db.String(120), unique=True, nullable=False)
+    password_hash = db.Column(db.String(256), nullable=False)
+    role = db.Column(db.String(20), default='user')
+    age = db.Column(db.Integer, nullable=True)
+    gender = db.Column(db.String(20), nullable=True)
+    phone = db.Column(db.String(20), nullable=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    last_login = db.Column(db.DateTime, nullable=True)
+    is_active = db.Column(db.Boolean, default=True)
+    
+    # Relationships
+    predictions = db.relationship('Prediction', backref='user', lazy=True, cascade="all, delete-orphan")
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'email': self.email,
+            'role': self.role,
+            'age': self.age,
+            'gender': self.gender,
+            'phone': self.phone,
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'last_login': self.last_login.isoformat() if self.last_login else None,
+            'is_active': self.is_active
+        }
+
+class Prediction(db.Model):
+    __tablename__ = 'predictions'
+    
+    id = db.Column(db.Integer, db.Identity(), primary_key=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    session_id = db.Column(db.String(64), nullable=False)
+    
+    # Image Paths
+    eye_image_path = db.Column(db.String(256))
+    palm_image_path = db.Column(db.String(256))
+    retina_image_path = db.Column(db.String(256))
+    skin_image_path = db.Column(db.String(256))
+    
+    # GradCAM Paths
+    eye_gradcam_path = db.Column(db.String(256))
+    palm_gradcam_path = db.Column(db.String(256))
+    retina_gradcam_path = db.Column(db.String(256))
+    skin_gradcam_path = db.Column(db.String(256))
+    
+    # Individual Predictions
+    eye_prediction = db.Column(db.String(20))
+    eye_confidence = db.Column(db.Float)
+    palm_prediction = db.Column(db.String(20))
+    palm_confidence = db.Column(db.Float)
+    retina_prediction = db.Column(db.String(20))
+    retina_confidence = db.Column(db.Float)
+    skin_prediction = db.Column(db.String(20))
+    skin_confidence = db.Column(db.Float)
+    
+    # Fused Results
+    anemia_result = db.Column(db.String(20))
+    anemia_confidence = db.Column(db.Float)
+    anemia_risk = db.Column(db.String(10))
+    
+    diabetes_result = db.Column(db.String(20))
+    diabetes_confidence = db.Column(db.Float)
+    diabetes_risk = db.Column(db.String(10))
+    
+    dfu_result = db.Column(db.String(20))
+    dfu_confidence = db.Column(db.Float)
+    dfu_risk = db.Column(db.String(10))
+    
+    overall_risk = db.Column(db.String(10))
+    model_type = db.Column(db.String(20), default='fusion') # Added for single scan tracking
+    recommendations = db.Column(db.Text)  # JSON string
+    
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    status = db.Column(db.String(20), default='completed')
+
+    def to_dict(self):
+        # Determine primary URLs based on model_type
+        image_key = self.model_type if self.model_type in ['eye', 'palm', 'retina', 'skin'] else 'eye'
+        image_path = getattr(self, f"{image_key}_image_path")
+        gradcam_path = getattr(self, f"{image_key}_gradcam_path")
+        
+        # Primary confidence based on model_type
+        if self.model_type == 'eye':
+            prim_conf = self.eye_confidence
+        elif self.model_type == 'palm':
+            prim_conf = self.palm_confidence
+        elif self.model_type == 'retina':
+            prim_conf = self.retina_confidence
+        elif self.model_type == 'skin':
+            prim_conf = self.skin_confidence
+        else:
+            prim_conf = max(filter(None, [self.eye_confidence, self.palm_confidence, self.retina_confidence, self.skin_confidence]), default=0.0)
+
+        # Authoritative Selection Logic (Improved Multi-Domain Support)
+        # We now avoid hard-masking "Not Scanned" if data actually exists for that domain
+        if self.model_type in ['palm', 'eye']:
+            primary_diag = "Anemia"
+            primary_stat = self.anemia_result or "Not Detected"
+            primary_risk = self.anemia_risk or "none"
+        elif self.model_type == 'skin':
+            primary_diag = "Diabetes"
+            primary_stat = self.dfu_result or "Not Detected"
+            primary_risk = self.dfu_risk or "none"
+        elif self.model_type == 'retina':
+            primary_diag = "Diabetes"
+            primary_stat = self.diabetes_result or "Not Detected"
+            primary_risk = self.diabetes_risk or "none"
+        else: # Fusion/History
+            primary_diag = "Health Analysis"
+            primary_stat = "Multi-Domain"
+            primary_risk = self.overall_risk or "none"
+
+        # Safe recommendation parsing (Handles legacy plain-text and new JSON lists)
+        recs_list = []
+        if self.recommendations:
+            try:
+                decoded = json.loads(self.recommendations)
+                if isinstance(decoded, list):
+                    recs_list = decoded
+                else:
+                    recs_list = [str(decoded)]
+            except (json.JSONDecodeError, TypeError):
+                # Fallback for legacy plain-text recommendations
+                recs_list = [r.strip() for r in self.recommendations.split('•') if r.strip()]
+                if not recs_list:
+                    recs_list = [self.recommendations]
+
+        # Detailed Display Mapping (Relaxed fallback)
+        anemia_disp = self.anemia_result or ("Not Detected" if self.model_type in ['eye', 'palm'] else "Not Scanned")
+        anemia_risk_disp = self.anemia_risk or "none"
+        
+        # Diabetes display prefers clinical diabetes_result, then DFU result
+        diabetes_disp = self.diabetes_result or (self.dfu_result if self.dfu_result and self.dfu_result != 'Not Scanned' else "Not Scanned")
+        diabetes_risk_disp = self.diabetes_risk or (self.dfu_risk if self.dfu_risk and self.dfu_risk != 'Low' else "none")
+
+        data = {
+            'id': self.id,
+            'user_id': self.user_id,
+            'session_id': self.session_id,
+            'model_type': self.model_type,
+            'image_url': f"/api/uploads/{image_path}" if image_path else None,
+            'heatmap_url': f"/api/uploads/{gradcam_path}" if gradcam_path else None,
+            'confidence': prim_conf or 0.0,
+            
+            # Authoritative Result (Main Display)
+            'primary_diagnosis': primary_diag,
+            'primary_status': primary_stat,
+            'primary_risk_level': primary_risk,
+            
+            # Detailed Classification Result (Internal/History)
+            'anemia_status': anemia_disp,
+            'anemia_risk': anemia_risk_disp,
+            'diabetes_status': diabetes_disp,
+            'diabetes_risk': diabetes_risk_disp,
+            'dfu_status': self.dfu_result or "Not Scanned",
+            'dfu_risk': self.dfu_risk or "none",
+            
+            'overall_risk': self.overall_risk,
+            'recommendations': " • ".join(recs_list),
+            'interpretation': f"Final neural consensus identified {primary_stat} markers in the {self.model_type} domain. Clinical risk is assessed as {primary_risk}.",
+            'images': {
+                'eye': self.eye_image_path,
+                'palm': self.palm_image_path,
+                'retina': self.retina_image_path,
+                'skin': self.skin_image_path
+            },
+            'gradcams': {
+                'eye': self.eye_gradcam_path,
+                'palm': self.palm_gradcam_path,
+                'retina': self.retina_gradcam_path,
+                'skin': self.skin_gradcam_path
+            },
+            'results': {
+                'eye': {'prediction': self.eye_prediction, 'confidence': self.eye_confidence},
+                'palm': {'prediction': self.palm_prediction, 'confidence': self.palm_confidence},
+                'retina': {'prediction': self.retina_prediction, 'confidence': self.retina_confidence},
+                'skin': {'prediction': self.skin_prediction, 'confidence': self.skin_confidence}
+            },
+            'summary': {
+                'anemia': {'result': self.anemia_result, 'confidence': self.anemia_confidence, 'risk': self.anemia_risk},
+                'diabetes': {'result': self.diabetes_result, 'confidence': self.diabetes_confidence, 'risk': self.diabetes_risk},
+                'dfu': {'result': self.dfu_result, 'confidence': self.dfu_confidence, 'risk': self.dfu_risk},
+                'overall_risk': self.overall_risk
+            },
+            'created_at': self.created_at.isoformat() if self.created_at else None,
+            'status': getattr(self, 'status', 'completed')
+        }
+        return data
+
+def init_db(app):
+    with app.app_context():
+        # 1. Standard schema creation
+        db.create_all()
+        
+        # 2. Migration: Add model_type column if it doesn't exist
+        try:
+            db.session.execute(text("ALTER TABLE predictions ADD COLUMN IF NOT EXISTS model_type VARCHAR(20) DEFAULT 'fusion'"))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Migration note (model_type): {e}")
+            
+        # 3. Migration: Add status column if it doesn't exist
+        try:
+            db.session.execute(text("ALTER TABLE predictions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'completed'"))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(f"Migration note (status): {e}")
+
+        # 4. Seed admin user if not exists
+        admin = User.query.filter_by(email='admin@mediascan.ai').first()
+        if not admin:
+            admin = User(
+                name='Systems Administrator',
+                email='admin@mediascan.ai',
+                password_hash=generate_password_hash('Admin@123'),
+                role='admin'
+            )
+            db.session.add(admin)
+            db.session.commit()
+            print("Admin user created: admin@mediascan.ai / Admin@123")
