@@ -1,0 +1,8 @@
+                      precision    recall  f1-score   support
+
+     Abnormal(Ulcer)     1.0000    1.0000    1.0000        51
+Normal(Healthy skin)     1.0000    1.0000    1.0000        54
+
+            accuracy                         1.0000       105
+           macro avg     1.0000    1.0000    1.0000       105
+        weighted avg     1.0000    1.0000    1.0000       105

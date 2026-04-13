@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+venv/
+__pycache__/
+*.pyc
+
+# Environment & Logs
+.env
+.DS_Store
+*.log
+
+# Build & Dist
+dist/
+build/
+
+# Redundant App Folders (Active code is in mediascan/)
+backend/
+frontend/
+
+# Large Datasets & Internal Project Data
+SB_Project/data/
+SB_Project/conjunctiva_split/
+SB_Project/palm_split/
+SB_Project/diabetes_eye/
+SB_Project/diabetes_skin/
+SB_Project/outputs/
+
+# Archives
+*.zip
+*.rar
+*.7z
+*.tar
+*.gz
+
+# Models - Ignore all, then allow specific integrated ones
+*.pth
+*.h5
+*.keras
+!SB_Project/codebase/outputs/models/Anemia_eye_mobilenet.pth
+!SB_Project/codebase/outputs/models/diabetes_eye_resnet50.pth
+!SB_Project/codebase/outputs/models/diabetes_skin_resnet50.pth
+!SB_Project/codebase/outputs/models/Anemia_skin_resnet50 .pth
