@@ -25,7 +25,7 @@ SB_Project/conjunctiva_split/
 SB_Project/palm_split/
 SB_Project/diabetes_eye/
 SB_Project/diabetes_skin/
-SB_Project/outputs/
+# SB_Project/outputs/
 
 # Archives
 *.zip
@@ -38,7 +38,8 @@ SB_Project/outputs/
 *.pth
 *.h5
 *.keras
-!SB_Project/codebase/outputs/models/Anemia_eye_mobilenet.pth
-!SB_Project/codebase/outputs/models/diabetes_eye_resnet50.pth
-!SB_Project/codebase/outputs/models/diabetes_skin_resnet50.pth
-!SB_Project/codebase/outputs/models/Anemia_skin_resnet50 .pth
+# Global Model Ignore (with codebase/outputs exception below)
+
+# Force allow all files in codebase outputs
+!SB_Project/codebase/outputs/
+!SB_Project/codebase/outputs/**

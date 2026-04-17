@@ -1,0 +1,41 @@
+INFO     | =======================================================
+INFO     | Preprocessing: ensuring dataset split ...
+INFO     | [preprocess] Split data already exists. Skipping split.
+INFO     | Preprocessing: validating dataset directories …
+INFO     | [preprocess] train: 2 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed1\train'.
+INFO     | [preprocess] val: 2 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed1\val'.
+INFO     | [preprocess] test: 2 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed1\test'.
+INFO     | Discovering training classes …
+INFO     |   Class 'anemia': 2000 images total in dataset split.
+INFO     |   Class 'non_anemia': 2000 images total in dataset split.
+INFO     | Discovering validation classes …
+INFO     |   Class 'anemia': 256 images total in dataset split.
+INFO     |   Class 'non_anemia': 169 images total in dataset split.
+INFO     | Discovering test classes …
+INFO     |   Class 'anemia': 257 images total in dataset split.
+INFO     |   Class 'non_anemia': 171 images total in dataset split.
+INFO     | Total classes: 2  ->  ['anemia', 'non_anemia']
+INFO     | Advanced augmentation enabled for training set.
+INFO     | Evaluating on data from: D:\Downloads\SB_Web-master\SB_Project\data\processed1\train
+INFO     |   Class 'anemia': 2000 images total in dataset split.
+INFO     |   Class 'non_anemia': 2000 images total in dataset split.
+INFO     | Dataset created: 4000 samples, 2 classes.
+INFO     | DataLoaders ready — train: 125 batches | val: 125 batches | test: 125 batches
+INFO     | Loading pretrained model: 'resnet50' …
+INFO     | Model 'resnet50' ready — total params: 23,512,130 | trainable: 23,512,130 | output classes: 2
+INFO     | =======================================================
+INFO     | Running inference on test set …
+INFO     | Test inference complete — samples: 4000 | accuracy: 56.55% | mean confidence: 0.6640
+INFO     | 
+Classification Report:
+              precision    recall  f1-score   support
+
+      anemia     0.5378    0.9315    0.6819      2000
+  non_anemia     0.7444    0.1995    0.3147      2000
+
+    accuracy                         0.5655      4000
+   macro avg     0.6411    0.5655    0.4983      4000
+weighted avg     0.6411    0.5655    0.4983      4000
+
+INFO     | Per-class metrics CSV saved.
+INFO     | Summary — Acc: 0.5655 | Macro-F1: 0.4983 | Weighted-F1: 0.4983

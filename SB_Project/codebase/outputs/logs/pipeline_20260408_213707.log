@@ -1,0 +1,41 @@
+2026-04-08 21:37:10,259 | INFO     | __main__ | =======================================================
+2026-04-08 21:37:10,261 | INFO     | __main__ | Preprocessing: ensuring dataset split ...
+2026-04-08 21:37:10,261 | INFO     | __main__ | [preprocess] Splitting raw data from ../diabetes_eye ...
+2026-04-08 21:37:13,485 | INFO     | __main__ |   Class 'Mild': physically augmenting 296 images to reach 1000...
+2026-04-08 21:37:32,341 | INFO     | __main__ |   Class 'Mild': reached 1000 images in 'train'.
+2026-04-08 21:37:33,037 | INFO     | __main__ |   Class 'Mild': finished with 296 original train images.
+2026-04-08 21:37:40,542 | INFO     | __main__ |   Class 'Moderate': physically augmenting 799 images to reach 1000...
+2026-04-08 21:37:45,597 | INFO     | __main__ |   Class 'Moderate': reached 1000 images in 'train'.
+2026-04-08 21:37:47,307 | INFO     | __main__ |   Class 'Moderate': finished with 799 original train images.
+2026-04-08 21:38:03,292 | INFO     | __main__ |   Class 'No_DR': finished with 1000 original train images.
+2026-04-08 21:38:05,585 | INFO     | __main__ |   Class 'Proliferate_DR': physically augmenting 236 images to reach 1000...
+2026-04-08 21:38:28,091 | INFO     | __main__ |   Class 'Proliferate_DR': reached 1000 images in 'train'.
+2026-04-08 21:38:28,582 | INFO     | __main__ |   Class 'Proliferate_DR': finished with 236 original train images.
+2026-04-08 21:38:31,017 | INFO     | __main__ |   Class 'Severe': physically augmenting 154 images to reach 1000...
+2026-04-08 21:38:50,355 | INFO     | __main__ |   Class 'Severe': reached 1000 images in 'train'.
+2026-04-08 21:38:50,675 | INFO     | __main__ |   Class 'Severe': finished with 154 original train images.
+2026-04-08 21:38:50,675 | INFO     | __main__ | [preprocess] Dataset split and physical offline augmentation complete.
+2026-04-08 21:38:50,675 | INFO     | __main__ | Preprocessing: validating dataset directories …
+2026-04-08 21:38:50,675 | INFO     | __main__ | [preprocess] train: 5 classes found in '../data/processed3\train'.
+2026-04-08 21:38:50,678 | INFO     | __main__ | [preprocess] val: 5 classes found in '../data/processed3\val'.
+2026-04-08 21:38:50,678 | INFO     | __main__ | [preprocess] test: 5 classes found in '../data/processed3\test'.
+2026-04-08 21:38:50,678 | INFO     | __main__ | Discovering training classes …
+2026-04-08 21:38:50,682 | INFO     | __main__ |   Class 'Mild': 1000 images total in dataset split.
+2026-04-08 21:38:50,689 | INFO     | __main__ |   Class 'Moderate': 1000 images total in dataset split.
+2026-04-08 21:38:50,692 | INFO     | __main__ |   Class 'No_DR': 1000 images total in dataset split.
+2026-04-08 21:38:50,697 | INFO     | __main__ |   Class 'Proliferate_DR': 1000 images total in dataset split.
+2026-04-08 21:38:50,700 | INFO     | __main__ |   Class 'Severe': 1000 images total in dataset split.
+2026-04-08 21:38:50,701 | INFO     | __main__ | Discovering validation classes …
+2026-04-08 21:38:50,702 | INFO     | __main__ |   Class 'Mild': 37 images total in dataset split.
+2026-04-08 21:38:50,703 | INFO     | __main__ |   Class 'Moderate': 99 images total in dataset split.
+2026-04-08 21:38:50,703 | INFO     | __main__ |   Class 'No_DR': 180 images total in dataset split.
+2026-04-08 21:38:50,703 | INFO     | __main__ |   Class 'Proliferate_DR': 29 images total in dataset split.
+2026-04-08 21:38:50,704 | INFO     | __main__ |   Class 'Severe': 19 images total in dataset split.
+2026-04-08 21:38:50,705 | INFO     | __main__ | Discovering test classes …
+2026-04-08 21:38:50,705 | INFO     | __main__ |   Class 'Mild': 37 images total in dataset split.
+2026-04-08 21:38:50,705 | INFO     | __main__ |   Class 'Moderate': 101 images total in dataset split.
+2026-04-08 21:38:50,706 | INFO     | __main__ |   Class 'No_DR': 181 images total in dataset split.
+2026-04-08 21:38:50,709 | INFO     | __main__ |   Class 'Proliferate_DR': 30 images total in dataset split.
+2026-04-08 21:38:50,709 | INFO     | __main__ |   Class 'Severe': 20 images total in dataset split.
+2026-04-08 21:38:50,710 | INFO     | __main__ | Total classes: 5  ->  ['Mild', 'Moderate', 'No_DR', 'Proliferate_DR', 'Severe']
+2026-04-08 21:38:50,711 | INFO     | __main__ | Advanced augmentation enabled for training set.

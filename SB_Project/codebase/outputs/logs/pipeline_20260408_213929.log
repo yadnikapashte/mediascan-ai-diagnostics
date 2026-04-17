@@ -1,0 +1,56 @@
+INFO     | =======================================================
+INFO     | Preprocessing: ensuring dataset split ...
+INFO     | [preprocess] Split data already exists. Skipping split.
+INFO     | Preprocessing: validating dataset directories …
+INFO     | [preprocess] train: 5 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed3\train'.
+INFO     | [preprocess] val: 5 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed3\val'.
+INFO     | [preprocess] test: 5 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed3\test'.
+INFO     | Discovering training classes …
+INFO     |   Class 'Mild': 1000 images total in dataset split.
+INFO     |   Class 'Moderate': 1000 images total in dataset split.
+INFO     |   Class 'No_DR': 1000 images total in dataset split.
+INFO     |   Class 'Proliferate_DR': 1000 images total in dataset split.
+INFO     |   Class 'Severe': 1000 images total in dataset split.
+INFO     | Discovering validation classes …
+INFO     |   Class 'Mild': 37 images total in dataset split.
+INFO     |   Class 'Moderate': 99 images total in dataset split.
+INFO     |   Class 'No_DR': 180 images total in dataset split.
+INFO     |   Class 'Proliferate_DR': 29 images total in dataset split.
+INFO     |   Class 'Severe': 19 images total in dataset split.
+INFO     | Discovering test classes …
+INFO     |   Class 'Mild': 37 images total in dataset split.
+INFO     |   Class 'Moderate': 101 images total in dataset split.
+INFO     |   Class 'No_DR': 181 images total in dataset split.
+INFO     |   Class 'Proliferate_DR': 30 images total in dataset split.
+INFO     |   Class 'Severe': 20 images total in dataset split.
+INFO     | Total classes: 5  ->  ['Mild', 'Moderate', 'No_DR', 'Proliferate_DR', 'Severe']
+INFO     | Advanced augmentation enabled for training set.
+INFO     | Evaluating on data from: D:\Downloads\SB_Web-master\SB_Project\data\processed3\train
+INFO     |   Class 'Mild': 1000 images total in dataset split.
+INFO     |   Class 'Moderate': 1000 images total in dataset split.
+INFO     |   Class 'No_DR': 1000 images total in dataset split.
+INFO     |   Class 'Proliferate_DR': 1000 images total in dataset split.
+INFO     |   Class 'Severe': 1000 images total in dataset split.
+INFO     | Dataset created: 5000 samples, 5 classes.
+INFO     | DataLoaders ready — train: 156 batches | val: 157 batches | test: 157 batches
+INFO     | Loading pretrained model: 'resnet50' …
+INFO     | Model 'resnet50' ready — total params: 23,518,277 | trainable: 23,518,277 | output classes: 5
+INFO     | =======================================================
+INFO     | Running inference on test set …
+INFO     | Test inference complete — samples: 5000 | accuracy: 87.44% | mean confidence: 0.8073
+INFO     | 
+Classification Report:
+                precision    recall  f1-score   support
+
+          Mild     0.8977    0.8950    0.8963      1000
+      Moderate     0.7147    0.9320    0.8090      1000
+         No_DR     0.9537    0.9880    0.9705      1000
+Proliferate_DR     0.9337    0.7470    0.8300      1000
+        Severe     0.9386    0.8100    0.8696      1000
+
+      accuracy                         0.8744      5000
+     macro avg     0.8877    0.8744    0.8751      5000
+  weighted avg     0.8877    0.8744    0.8751      5000
+
+INFO     | Per-class metrics CSV saved.
+INFO     | Summary — Acc: 0.8744 | Macro-F1: 0.8751 | Weighted-F1: 0.8751

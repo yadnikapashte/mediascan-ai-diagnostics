@@ -1,0 +1,41 @@
+INFO     | =======================================================
+INFO     | Preprocessing: ensuring dataset split ...
+INFO     | [preprocess] Split data already exists. Skipping split.
+INFO     | Preprocessing: validating dataset directories …
+INFO     | [preprocess] train: 2 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed2\train'.
+INFO     | [preprocess] val: 2 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed2\val'.
+INFO     | [preprocess] test: 2 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed2\test'.
+INFO     | Discovering training classes …
+INFO     |   Class 'Abnormal(Ulcer)': 1500 images total in dataset split.
+INFO     |   Class 'Normal(Healthy skin)': 1500 images total in dataset split.
+INFO     | Discovering validation classes …
+INFO     |   Class 'Abnormal(Ulcer)': 51 images total in dataset split.
+INFO     |   Class 'Normal(Healthy skin)': 54 images total in dataset split.
+INFO     | Discovering test classes …
+INFO     |   Class 'Abnormal(Ulcer)': 52 images total in dataset split.
+INFO     |   Class 'Normal(Healthy skin)': 55 images total in dataset split.
+INFO     | Total classes: 2  ->  ['Abnormal(Ulcer)', 'Normal(Healthy skin)']
+INFO     | Advanced augmentation enabled for training set.
+INFO     | Evaluating on data from: D:\Downloads\SB_Web-master\SB_Project\data\processed2\train
+INFO     |   Class 'Abnormal(Ulcer)': 1500 images total in dataset split.
+INFO     |   Class 'Normal(Healthy skin)': 1500 images total in dataset split.
+INFO     | Dataset created: 3000 samples, 2 classes.
+INFO     | DataLoaders ready — train: 93 batches | val: 94 batches | test: 94 batches
+INFO     | Loading pretrained model: 'resnet50' …
+INFO     | Model 'resnet50' ready — total params: 23,512,130 | trainable: 23,512,130 | output classes: 2
+INFO     | =======================================================
+INFO     | Running inference on test set …
+INFO     | Test inference complete — samples: 3000 | accuracy: 99.90% | mean confidence: 0.9290
+INFO     | 
+Classification Report:
+                      precision    recall  f1-score   support
+
+     Abnormal(Ulcer)     0.9980    1.0000    0.9990      1500
+Normal(Healthy skin)     1.0000    0.9980    0.9990      1500
+
+            accuracy                         0.9990      3000
+           macro avg     0.9990    0.9990    0.9990      3000
+        weighted avg     0.9990    0.9990    0.9990      3000
+
+INFO     | Per-class metrics CSV saved.
+INFO     | Summary — Acc: 0.9990 | Macro-F1: 0.9990 | Weighted-F1: 0.9990

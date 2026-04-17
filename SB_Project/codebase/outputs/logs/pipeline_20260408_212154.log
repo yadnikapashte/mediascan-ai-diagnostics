@@ -1,0 +1,27 @@
+INFO     | =======================================================
+INFO     | Preprocessing: ensuring dataset split ...
+INFO     | [preprocess] Split data already exists. Skipping split.
+INFO     | Preprocessing: validating dataset directories …
+INFO     | [preprocess] train: 2 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed2\train'.
+INFO     | [preprocess] val: 2 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed2\val'.
+INFO     | [preprocess] test: 2 classes found in 'D:\Downloads\SB_Web-master\SB_Project\data\processed2\test'.
+INFO     | Discovering training classes …
+INFO     |   Class 'Abnormal(Ulcer)': 1500 images total in dataset split.
+INFO     |   Class 'Normal(Healthy skin)': 1500 images total in dataset split.
+INFO     | Discovering validation classes …
+INFO     |   Class 'Abnormal(Ulcer)': 51 images total in dataset split.
+INFO     |   Class 'Normal(Healthy skin)': 54 images total in dataset split.
+INFO     | Discovering test classes …
+INFO     |   Class 'Abnormal(Ulcer)': 52 images total in dataset split.
+INFO     |   Class 'Normal(Healthy skin)': 55 images total in dataset split.
+INFO     | Total classes: 2  ->  ['Abnormal(Ulcer)', 'Normal(Healthy skin)']
+INFO     | Advanced augmentation enabled for training set.
+INFO     | Evaluating on data from: D:\Downloads\SB_Web-master\SB_Project\data\processed2\train
+INFO     |   Class 'Abnormal(Ulcer)': 1500 images total in dataset split.
+INFO     |   Class 'Normal(Healthy skin)': 1500 images total in dataset split.
+INFO     | Dataset created: 3000 samples, 2 classes.
+INFO     | DataLoaders ready — train: 93 batches | val: 94 batches | test: 94 batches
+INFO     | Loading pretrained model: 'resnet34' …
+INFO     | Model 'resnet34' ready — total params: 21,285,698 | trainable: 21,285,698 | output classes: 2
+INFO     | =======================================================
+INFO     | Running inference on test set …
