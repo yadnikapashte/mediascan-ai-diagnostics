@@ -26,6 +26,8 @@ SB_Project/palm_split/
 SB_Project/diabetes_eye/
 SB_Project/diabetes_skin/
 # SB_Project/outputs/
+!SB_Project/outputs/
+!SB_Project/outputs/**
 
 # Archives
 *.zip
