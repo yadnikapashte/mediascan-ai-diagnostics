@@ -171,6 +171,10 @@ const ResultsPage = () => {
             <span style={{ fontSize: '18px', fontWeight: 700, color: '#94a3b8', fontFamily: "'DM Sans', sans-serif" }}>
               {new Date(result.created_at).toLocaleDateString(i18n.language === 'en' ? 'en-US' : (i18n.language === 'hi' ? 'hi-IN' : (i18n.language === 'mr' ? 'mr-IN' : 'gu-IN')), { day: 'numeric', month: 'long', year: 'numeric' })}
             </span>
+            <div style={{ width: '4px', height: '4px', borderRadius: '50%', background: '#cbd5e1' }}></div>
+            <span style={{ fontSize: '18px', fontWeight: 800, color: '#1a56db', background: '#eff6ff', padding: '4px 12px', borderRadius: '10px' }}>
+               Trained Neural Networks (TNN) prioritized. Results are indicative.
+            </span>
 
             {user && (
               <>
@@ -202,6 +206,32 @@ const ResultsPage = () => {
 
         </div>
       </div>
+
+      {/* LOW CONFIDENCE WARNING BANNER */}
+      {result.confidence !== undefined && result.confidence < 70 && (
+        <div style={{
+          background: 'linear-gradient(135deg, #fffbeb, #fef3c7)',
+          border: '2px solid #f59e0b',
+          borderRadius: '20px',
+          padding: '20px 32px',
+          marginBottom: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '20px',
+          boxShadow: '0 4px 12px rgba(245, 158, 11, 0.15)'
+        }}>
+          <span style={{ fontSize: '36px' }}>⚠️</span>
+          <div>
+            <div style={{ fontSize: '22px', fontWeight: 900, color: '#92400e', fontFamily: "'Outfit', sans-serif", marginBottom: '6px' }}>
+              Low Model Confidence — {result.confidence.toFixed(1)}%
+            </div>
+            <div style={{ fontSize: '17px', color: '#78350f', fontWeight: 700, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5 }}>
+              The AI model is uncertain about this result. This does <strong>not</strong> mean you are healthy — it means the image quality or pattern 
+              was ambiguous for the {result.model_type} scan. Please upload a clearer image or consult a doctor for a blood test to confirm.
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* HEALTH SCORE CARD [NEW] */}
       <div style={{ 
@@ -284,12 +314,34 @@ const ResultsPage = () => {
            <div style={{ fontSize: '32px', fontWeight: 900, color: '#111827', marginBottom: '32px', fontFamily: "'Outfit', sans-serif", letterSpacing: '-1px' }}>
               {t('results.results_summary')}
            </div>
-           <SummaryRow label={t('results.anemia_result')} value={result.anemia_status === 'Anemic' ? t('results.status.anemic') : t('results.status.non_anemic')} isPositive={result.anemia_status === 'Anemic'} />
-           <SummaryRow 
-              label={t('results.diabetes_result')} 
-              value={result.diabetes_status === 'Diabetic' ? t('results.status.diabetic') : (result.diabetes_status === 'Abnormal(Ulcer)' ? t('results.status.abnormal_ulcer') : t('results.status.non_diabetic'))} 
-              isPositive={result.diabetes_status === 'Diabetic' || result.diabetes_status === 'Abnormal(Ulcer)'} 
-           />
+
+           {/* Anemia Result — shown for eye/palm scans or fusion */}
+           {(result.model_type === 'eye' || result.model_type === 'palm' || !['retina','skin'].includes(result.model_type)) && (
+             <SummaryRow
+               label={t('results.anemia_result')}
+               value={
+                 result.anemia_status === 'Anemic' ? t('results.status.anemic') :
+                 result.anemia_status === 'Non-Anemic' ? t('results.status.non_anemic') :
+                 result.anemia_status || t('results.status.not_scanned')
+               }
+               isPositive={result.anemia_status === 'Anemic'}
+             />
+           )}
+
+           {/* Diabetes Result — shown for retina/skin scans or fusion */}
+           {(result.model_type === 'retina' || result.model_type === 'skin' || !['eye','palm'].includes(result.model_type)) && (
+             <SummaryRow
+               label={t('results.diabetes_result')}
+               value={
+                 result.diabetes_status === 'Diabetic' ? t('results.status.diabetic') :
+                 result.diabetes_status === 'Non-Diabetic' ? t('results.status.non_diabetic') :
+                 result.dfu_status === 'Abnormal(Ulcer)' ? t('results.status.abnormal_ulcer') :
+                 result.diabetes_status || t('results.status.not_scanned')
+               }
+               isPositive={result.diabetes_status === 'Diabetic' || result.dfu_status === 'Abnormal(Ulcer)'}
+             />
+           )}
+
            {result.skin_image_path && (
              <SummaryRow label={t('results.status.abnormal_ulcer')} value={result.dfu_result === 'Abnormal(Ulcer)' ? t('results.status.abnormal_ulcer') : t('results.status.normal')} isPositive={result.dfu_result === 'Abnormal(Ulcer)'} />
            )}
@@ -331,11 +383,51 @@ const ResultsPage = () => {
                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', color: '#1e40af', fontWeight: 1000, fontSize: '24px', marginBottom: '16px', fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.5px' }}>
                   <Info size={28} /> {t('results.ai_interpretation')}
                </div>
-               <p style={{ fontSize: '30px', color: '#1e40af', fontWeight: 800, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5, margin: 0 }}>
+
+               {/* Show actual palm/eye model verdict clearly */}
+               {(result.model_type === 'palm' || result.model_type === 'eye') && (
+                 <div style={{
+                   background: result.anemia_status === 'Anemic' ? '#fef2f2' : '#f0fdf4',
+                   border: `2px solid ${result.anemia_status === 'Anemic' ? '#fca5a5' : '#86efac'}`,
+                   borderRadius: '16px', padding: '20px 28px', marginBottom: '20px',
+                   display: 'flex', alignItems: 'center', gap: '16px'
+                 }}>
+                   <span style={{ fontSize: '36px' }}>{result.anemia_status === 'Anemic' ? '⚠️' : '✅'}</span>
+                   <div>
+                     <div style={{ fontSize: '28px', fontWeight: 900, color: result.anemia_status === 'Anemic' ? '#dc2626' : '#059669', fontFamily: "'Outfit', sans-serif" }}>
+                       Model Verdict: {result.anemia_status === 'Anemic' ? 'ANEMIC' : result.anemia_status === 'Non-Anemic' ? 'NON-ANEMIC' : result.anemia_status || 'Inconclusive'}
+                     </div>
+                     <div style={{ fontSize: '18px', color: '#6b7280', fontWeight: 700, fontFamily: "'DM Sans', sans-serif", marginTop: '4px' }}>
+                       Confidence: {result.confidence ? `${result.confidence.toFixed(1)}%` : 'N/A'} · Risk: {(result.anemia_risk || 'none').toUpperCase()}
+                     </div>
+                   </div>
+                 </div>
+               )}
+
+               {(result.model_type === 'retina' || result.model_type === 'skin') && (
+                 <div style={{
+                   background: (result.diabetes_status === 'Diabetic' || result.dfu_status === 'Abnormal(Ulcer)') ? '#fef2f2' : '#f0fdf4',
+                   border: `2px solid ${(result.diabetes_status === 'Diabetic' || result.dfu_status === 'Abnormal(Ulcer)') ? '#fca5a5' : '#86efac'}`,
+                   borderRadius: '16px', padding: '20px 28px', marginBottom: '20px',
+                   display: 'flex', alignItems: 'center', gap: '16px'
+                 }}>
+                   <span style={{ fontSize: '36px' }}>{(result.diabetes_status === 'Diabetic' || result.dfu_status === 'Abnormal(Ulcer)') ? '⚠️' : '✅'}</span>
+                   <div>
+                     <div style={{ fontSize: '28px', fontWeight: 900, color: (result.diabetes_status === 'Diabetic' || result.dfu_status === 'Abnormal(Ulcer)') ? '#dc2626' : '#059669', fontFamily: "'Outfit', sans-serif" }}>
+                       Model Verdict: {result.model_type === 'retina' ? (result.diabetes_status || 'Inconclusive') : (result.dfu_status || 'Inconclusive')}
+                     </div>
+                     <div style={{ fontSize: '18px', color: '#6b7280', fontWeight: 700, fontFamily: "'DM Sans', sans-serif", marginTop: '4px' }}>
+                       Confidence: {result.confidence ? `${result.confidence.toFixed(1)}%` : 'N/A'} · Risk: {(result.diabetes_risk || result.dfu_risk || 'none').toUpperCase()}
+                     </div>
+                   </div>
+                 </div>
+               )}
+
+               <p style={{ fontSize: '22px', color: '#1e40af', fontWeight: 700, fontFamily: "'DM Sans', sans-serif", lineHeight: 1.5, margin: 0 }}>
                   {t('results.analysis_explanations.summary_desc', { 
-                    diagnosis: result.primary_diagnosis.toLowerCase(), 
+                    diagnosis: result.primary_diagnosis, 
                     type: result.model_type,
-                    risk: t(`results.risk_levels.${result.primary_risk_level.toLowerCase()}`)
+                    risk: t(`results.risk_levels.${(result.primary_risk_level || 'none').toLowerCase()}`)
                   })}
                </p>
 

@@ -9,15 +9,14 @@ from torchvision import models, transforms
 import cv2
 
 # Set absolute path for models directory to ensure it's found from any working directory
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 MODEL_DIR = os.path.join(BASE_DIR, "SB_Project", "codebase", "outputs", "models")
 logger = logging.getLogger(__name__)
 
 # ─── Configuration ────────────────────────────────────────────────────────────
-# Updated classes to match the actual multi-class and binary model outputs
 CLASSES = {
     'eye':    ['anemia', 'non_anemia'],
-    'palm':   ['anemic', 'non_anemic'], # Note: Using demo class if model not available
+    'palm':   ['anemia', 'non_anemia'],
     'retina': ['Mild', 'Moderate', 'No_DR', 'Proliferate_DR', 'Severe'],
     'skin':   ['Abnormal(Ulcer)', 'Normal(Healthy skin)']
 }
@@ -26,7 +25,7 @@ IMG_SIZE = (224, 224)
 NORMALIZE_MEAN = [0.485, 0.456, 0.406]
 NORMALIZE_STD  = [0.229, 0.224, 0.225]
 
-# ─── Model Factory (Architectures) ──────────────────────────────────────────
+# ─── Model Factory ────────────────────────────────────────────────────────────
 def build_mobilenet_v2(num_classes):
     model = models.mobilenet_v2(weights=None)
     in_features = model.classifier[1].in_features
@@ -56,23 +55,16 @@ class ModelManager:
             cls._instance = super().__new__(cls)
         return cls._instance
     
-    def load_models(self, models_folder):
+    def load_models(self, models_folder=None):
         """Load all .pth models from disk using project-relative paths."""
-        # Calculate Project Root (d:/Downloads/SB_Web-master)
         try:
-            # Current file is in mediascan/backend/models/ai_models.py
-            BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
-            MODEL_DIR = os.path.join(BASE_DIR, 'SB_Project', 'codebase', 'outputs', 'models')
-            
             model_configs = {
                 'eye':    {'path': os.path.join(MODEL_DIR, 'Anemia_eye_mobilenet.pth'), 'arch': 'mobilenet'},
                 'retina': {'path': os.path.join(MODEL_DIR, 'diabetes_eye_resnet50.pth'),  'arch': 'resnet50'},
                 'skin':   {'path': os.path.join(MODEL_DIR, 'diabetes_skin_resnet50.pth'), 'arch': 'resnet50'},
-                # Note: This file has a trailing space in its actual name on the filesystem
                 'palm':   {'path': os.path.join(MODEL_DIR, 'Anemia_skin_resnet50 .pth'), 'arch': 'resnet50'}
             }
-            
-            print(f"🔍 Initializing ModelManager from: {MODEL_DIR}")
+            print(f"[ModelManager] Initializing from: {MODEL_DIR}")
         except Exception as e:
             logger.error(f"Failed to resolve model directory: {e}")
             return
@@ -92,11 +84,14 @@ class ModelManager:
                     model.to(self._device)
                     model.eval()
                     self._models[key] = model
-                    logger.info(f"✅ Loaded {key} {cfg['arch']} model from {path}")
+                    logger.info(f"[OK] Loaded {key} ({cfg['arch']}) model")
+                    print(f"✅ [OK] Loaded {key} model")
                 except Exception as e:
-                    logger.error(f"❌ Failed to load {key} model: {e}")
+                    logger.error(f"[FAIL] Could not load {key} model: {e}")
+                    print(f"❌ [FAIL] Could not load {key} model: {e}")
             else:
-                logger.warning(f"⚠️ Model file not found: {path} — will use demo mode")
+                logger.error(f"[CRITICAL] Model file not found: {path}")
+                print(f"❌ [CRITICAL] Model file not found: {path}")
 
     def get_model(self, model_type):
         return self._models.get(model_type)
@@ -173,8 +168,6 @@ def generate_gradcam(model, input_tensor, image_path, output_path, model_type):
         else: # MobileNet
             target_layer = model.features[-1]
             
-        # Stable Inference: Keep in eval mode to prevent BatchNorm instability
-        # But ensure we have a hook into the gradients
         cam_gen = GradCAM(model, target_layer)
         heatmap = cam_gen.generate(input_tensor)
         
@@ -210,8 +203,8 @@ def _predict(model_type, image_path, gradcam_output_path=None):
     
     model = model_manager.get_model(model_type)
     if model is None:
-        logger.error(f"❌ Model not loaded for: {model_type}. Analysis aborted to prevent incorrect data.")
-        return {'error': f"Clinical model for {model_type} is not available on this server.", 'status': 'failed'}
+        logger.error(f"❌ Subsystem failure: {model_type} model not available. Demo mode disabled.")
+        return {'error': f"Neural analysis subsystem for {model_type} is offline. Please contact admin.", 'status': 'failed'}
         
     try:
         input_tensor = preprocess_image(image_path)
@@ -234,7 +227,6 @@ def _predict(model_type, image_path, gradcam_output_path=None):
         }
         
         if gradcam_output_path:
-            # Re-run with gradient for GradCAM (Maintain eval() for BatchNorm stability)
             res['gradcam_path'] = generate_gradcam(model, input_tensor, image_path, gradcam_output_path, model_type)
             
         return res
@@ -263,169 +255,93 @@ def predict_palm_anemia(p, g=None): return _predict('palm', p, g)
 def predict_retina_diabetes(p, g=None): return _predict('retina', p, g)
 def predict_skin_dfu(p, g=None): return _predict('skin', p, g)
 
-# ─── Clinical Domain Identification (Auto-Detection) ──────────────────────────
+# ─── Clinical Domain Identification (IMPROVED ROBUSTNESS) ────────────────────
 def identify_domain(image_path):
     """
-    Identifies if an image is a Retina, Eye, Palm, or Skin scan using 
-    Computer Vision heuristics and confidence voting.
+    Identifies scan types by running all models and applying structural tie-breaking.
     """
     try:
+        # 1. LOAD IMAGE & BASIC HEURISTICS
         img = cv2.imread(image_path)
         if img is None: return 'eye'
         
-        img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        h, w = img.shape[:2]
+        
+        # Enhanced Vignette Check: If ANY edge/corner is black, it's likely a clinical scan.
+        c = 20
+        edge_blocks = [
+            img[:c, :c], img[:c, -c:], img[-c:, :c], img[-c:, -c:], # Corners
+            img[h//2-c:h//2+c, :c], img[h//2-c:h//2+c, -c:],       # Sides
+            img[:c, w//2-c:w//2+c], img[-c:, w//2-c:w//2+c]        # Top/Bottom
+        ]
+        block_averages = [np.mean(b) for b in edge_blocks]
+        min_edge_val = min(block_averages)
+        
+        # If any significant edge block is dark (< 50), it's a vignette image (Retina/Eye)
+        is_vignette = min_edge_val < 50
+        
+        # Color & Circularity Features
         ycrcb = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-
-        # Identify Foreground (Ignore pure white/black boundaries)
-        # Background is typically > 240 (white) or < 15 (black)
-        white_bg = cv2.inRange(img_rgb, (240, 240, 240), (255, 255, 255))
-        black_bg = cv2.inRange(img_rgb, (0, 0, 0), (15, 15, 15))
-        bg_mask = cv2.bitwise_or(white_bg, black_bg)
-        fg_mask = cv2.bitwise_not(bg_mask)
-        fg_px = np.count_nonzero(fg_mask)
-        
-        if fg_px < (img.shape[0] * img.shape[1] * 0.05):
-            # If foreground is too small, use whole image but caution
-            fg_px = img.shape[0] * img.shape[1]
-            fg_mask = np.ones((img.shape[0], img.shape[1]), dtype=np.uint8) * 255
-
-        # 0. EARLY OOD PROTECTION: Complexity & Spectral Check
-        # Nature photos (flowers, landscapes) have high edge density
-        edges = cv2.Canny(gray, 100, 200)
-        edge_density = np.count_nonzero(edges) / img.size
-        
-        # Spectral Check: Check for Hue Diversity (Nature vs Medical)
-        hue_std = np.std(hsv[:,:,0][fg_mask > 0])
-        
-        # Diagnostic Tracers
-        print(f"--- [DIAGNOSTIC] Scan Analysis ---")
-        print(f"Complexity (Edge Density): {edge_density:.4f}")
-        print(f"Hue Variance (Std Dev): {hue_std:.4f}")
-        
-        # Medical scans are typically low-frequency AND low hue-variance
-        if edge_density > 0.18 or hue_std > 35: # Nature photos have high hue std
-            print(f"VERDICT: REJECTED (OOD / High Complexity)")
-            return 'unknown'
-
-        # 1. Palm/Skin Check (Foregound-normalized)
         skin_mask = cv2.inRange(ycrcb, (0, 133, 77), (255, 173, 127))
-        # Only count skin pixels that are in the foreground
-        skin_fg = cv2.bitwise_and(skin_mask, fg_mask)
-        skin_ratio_fg = np.count_nonzero(skin_fg) / fg_px
+        skin_ratio = np.count_nonzero(skin_mask) / (h*w)
         
-        if skin_ratio_fg > 0.40:
-            laplacian_var = cv2.Laplacian(gray, cv2.CV_64F).var()
+        # 2. RUN ALL FOUR MODELS (Confidence Sweep)
+        domains = ['retina', 'eye', 'palm', 'skin']
+        confidences = {}
+        
+        for d in domains:
+            # EXCLUSION: Vignetted images are never Skin/Palm
+            if is_vignette and d in ['skin', 'palm']:
+                continue
             
-            # Additional check: Saturation levels
-            # Ulcers/Wounds often have higher saturation (reds/purples) than palms
-            hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-            sat_mean = np.mean(hsv[:,:,1][fg_mask > 0])
-            
-            # RELAXED LOGIC: 
-            # Palms can have moderate texture and high saturation in varied lighting.
-            # Ulcers/Wounds usually have VERY high variance (> 250) or extreme saturation (> 160).
-            if laplacian_var < 250 and sat_mean < 160: 
-                return 'palm'
-            return 'skin'
-
-        # 2. Retina Check (High Red/Orange in Foreground)
-        red_mask = cv2.inRange(img_rgb, (110, 0, 0), (255, 100, 70))
-        red_fg = cv2.bitwise_and(red_mask, fg_mask)
-        red_ratio_fg = np.count_nonzero(red_fg) / fg_px
-        if red_ratio_fg > 0.4:
-            return 'retina'
-
-        # 3. Eye Check (Looking for circular structures + white)
-        # Sclera detection in foreground
-        white_mask = cv2.inRange(img_rgb, (210, 210, 210), (255, 255, 255))
-        # Mask out the background white to find actual sclera
-        sclera_fg = cv2.bitwise_and(white_mask, fg_mask)
-        sclera_ratio_fg = np.count_nonzero(sclera_fg) / fg_px
-        if sclera_ratio_fg > 0.1:
-            # Confirm with circle detection (Iris/Pupil)
-            gray_m = cv2.medianBlur(gray, 5)
-            circles = cv2.HoughCircles(gray_m, cv2.HOUGH_GRADIENT, 1, 30, param1=50, param2=30, minRadius=20, maxRadius=150)
-            
-            # Eye must have specific ocular tones AND a DARK center (pupil)
-            eye_color_mask = cv2.inRange(hsv, (0, 10, 20), (40, 255, 255))
-            eye_color_ratio = np.count_nonzero(eye_color_mask) / img.size
-            print(f"Ocular Tonality Ratio: {eye_color_ratio:.4f}")
-            
-            if circles is not None:
-                for circle in circles[0, :]:
-                    center_x, center_y, radius = map(int, circle)
-                    h, w = gray.shape
-                    y1, y2 = max(0, center_y-5), min(h, center_y+5)
-                    x1, x2 = max(0, center_x-5), min(w, center_x+5)
-                    center_intensity = np.mean(gray[y1:y2, x1:x2])
-                    print(f"Circle Found: Intensity={center_intensity:.1f}, Radius={radius}")
+            res = _predict(d, image_path)
+            if res.get('status') == 'success':
+                conf = res.get('confidence', 0)
+                
+                # Weighting
+                if d == 'retina' and is_vignette:
+                    conf += 15 # Strong clinical signal boost
+                if d == 'eye' and is_vignette:
+                    conf *= 0.6 # Eye scans are usually bright crops
                     
-                    if eye_color_ratio > 0.05 and center_intensity < 150: # Pupil check
-                        print(f"VERDICT: Identified as [EYE]")
-                        return 'eye'
+                confidences[d] = conf
 
-            # If no circles, but very high sclera and eye-tonality
-            eye_color_mask = cv2.inRange(hsv, (0, 10, 20), (40, 255, 255))
-            eye_color_ratio = np.count_nonzero(eye_color_mask) / img.size
-            if sclera_ratio_fg > 0.3 and eye_color_ratio > 0.05:
-                print(f"VERDICT: Identified as [EYE] (High Sclera Match)")
-                return 'eye'
-        
-        # 4. Unknown/OOD Detection (Complexity Check)
-        # Nature photos (flowers, landscapes) have high edge density
-        edges = cv2.Canny(gray, 100, 200)
-        edge_density = np.count_nonzero(edges) / img.size
-        # Medical scans are typically low-frequency / smooth backgrounds
-        if edge_density > 0.15: # High complexity = Likely not a medical scan
-            return 'unknown'
+        if not confidences:
+            return 'retina' if is_vignette else 'eye'
 
-    except Exception as e:
-        logger.error(f"Advanced heuristic identification failed: {e}")
-
-    # 4. Fallback: Confidence-Based Voting (Run all models)
-    try:
-        best_model = 'eye'
-        max_conf = -1
+        # 3. SELECT WINNER
+        sorted_conf = sorted(confidences.items(), key=lambda x: x[1], reverse=True)
+        best_domain, best_conf = sorted_conf[0]
         
-        for m_type in ['eye', 'palm', 'retina', 'skin']:
-            res = _predict(m_type, image_path)
-            if res['status'] == 'success' and not res.get('demo_mode', True):
-                if res['confidence'] > max_conf:
-                    max_conf = res['confidence']
-                    best_model = m_type
-        
-        # OOD Rejection: Only accept the winner if confidence is high AND it's not unknown
-        if max_conf > 0.85: # Fixed decimal threshold
-            return best_model
+        # THE ULTIMATE TIE-BREAKER
+        # If dark edges exist, Retina always wins against Eye if it has any decent confidence.
+        if is_vignette and confidences.get('retina', 0) > 40:
+            return 'retina'
             
-        return 'unknown'
+        logger.info(f"Auto-Detect Final: {best_domain.upper()} ({best_conf:.2f}%) [min_edge: {min_edge_val:.1f}]")
+        return best_domain
+
     except Exception as e:
-        logger.error(f"Heuristic identification failed: {e}")
-        return 'unknown'
+        logger.error(f"Auto-Detection Pipeline Crash: {e}")
+        return 'eye' # Safe fallback to standard eye model
 
 def predict_auto(image_path, gradcam_output_path=None):
-    """Main entry point for AI Auto-Detection."""
     detected_domain = identify_domain(image_path)
     res = _predict(detected_domain, image_path, gradcam_output_path)
     res['detected_domain'] = detected_domain
     return res
 
-# Fusion logic (Ensures no 'raw' 50% defaults are used if models actually fail)
+# ─── Fusion Logic (Fixed Thresholds) ──────────────────────────────────────────
 def fuse_anemia_predictions(eye, palm):
-    # Check for direct errors in inputs
     if eye.get('status') == 'failed' or palm.get('status') == 'failed':
-        return {'result': 'Inconclusive', 'confidence': 0.0, 'risk': 'Unknown', 'error': 'One or more required models failed.'}
+        return {'result': 'Inconclusive', 'confidence': 0.0, 'risk': 'Unknown'}
 
     e_p = eye.get('probabilities', {}).get('anemia')
-    p_p = palm.get('probabilities', {}).get('anemic')
+    p_p = palm.get('probabilities', {}).get('anemia')
     
-    # If both are missing actual data, return failure
     if e_p is None and p_p is None:
         return {'result': 'Not Scanned', 'confidence': 0.0, 'risk': 'none'}
         
-    # Use available one or weighted average
     if e_p is not None and p_p is not None:
         fused = (float(e_p)/100 * 0.55) + (float(p_p)/100 * 0.45)
     elif e_p is not None:
@@ -435,18 +351,16 @@ def fuse_anemia_predictions(eye, palm):
 
     is_anemic = fused >= 0.5
     conf = fused if is_anemic else (1 - fused)
-    return {'result': 'Anemic' if is_anemic else 'Non-Anemic', 'confidence': round(conf * 100, 2), 'risk': 'High' if fused > 0.8 else ('Medium' if fused > 0.4 else 'Low')}
+    risk = 'High' if fused > 0.8 else ('Medium' if fused > 0.4 else 'Low')
+    return {'result': 'Anemic' if is_anemic else 'Non-Anemic', 'confidence': round(conf * 100, 2), 'risk': risk}
 
 def fuse_diabetes_predictions(retina, skin):
-    # Check for direct errors in inputs
     if retina.get('status') == 'failed' or skin.get('status') == 'failed':
-        return {'result': 'Inconclusive', 'confidence': 0.0, 'risk': 'Unknown', 'error': 'One or more required models failed.'}
+        return {'result': 'Inconclusive', 'confidence': 0.0, 'risk': 'Unknown'}
 
-    # retina classes: ['Mild', 'Moderate', 'No_DR', 'Proliferate_DR', 'Severe']
     no_dr_p = retina.get('probabilities', {}).get('No_DR')
     is_diabetic_r = (1 - float(no_dr_p)/100) if no_dr_p is not None else None
     
-    # skin classes: ['Abnormal(Ulcer)', 'Normal(Healthy skin)']
     abnormal_p = skin.get('probabilities', {}).get('Abnormal(Ulcer)')
     is_diabetic_s = float(abnormal_p)/100 if abnormal_p is not None else None
     
@@ -462,25 +376,25 @@ def fuse_diabetes_predictions(retina, skin):
 
     is_diabetic = fused >= 0.5
     conf = fused if is_diabetic else (1 - fused)
-    return {'result': 'Diabetic' if is_diabetic else 'Non-Diabetic', 'confidence': round(conf * 100, 2), 'risk': 'High' if fused > 0.75 else ('Medium' if fused > 0.35 else 'Low')}
+    risk = 'High' if fused > 0.75 else ('Medium' if fused > 0.35 else 'Low')
+    return {'result': 'Diabetic' if is_diabetic else 'Non-Diabetic', 'confidence': round(conf * 100, 2), 'risk': risk}
 
 def compute_overall_risk(a_risk, d_risk):
     order = {'High': 3, 'Medium': 2, 'Low': 1}
     max_val = max(order.get(a_risk, 1), order.get(d_risk, 1))
     return [k for k, v in order.items() if v == max_val][0]
 
-def generate_recommendations(anemia, diabetes):
+def generate_recommendations(anemia, diabetes, skin_res=None):
     recs = []
-    if anemia['result'] == 'Anemic':
-        recs.append("⚠️ Consult a haematologist for a Full Blood Count (FBC) test.")
-        recs.append("Increase iron-rich foods: spinach, lentils, and red meat.")
-    else: recs.append("✅ Hemoglobin levels appear normal based on visual analysis.")
-    if diabetes['result'] == 'Diabetic':
-        recs.append("⚠️ Schedule an HbA1c test to confirm blood sugar levels.")
-        recs.append("Avoid refined sugars and monitor carbohydrate intake.")
-    elif diabetes['result'] == 'Non-Diabetic':
-        recs.append("✅ Retina/Skin analysis shows low risk for diabetes.")
-    # If Not Scanned, we don't add a specific recommendation for diabetes
-    recs.append("💧 Maintain hydration and regular exercise for metabolic health.")
-    recs.append("⚕️ This AI screening tool is not a final diagnosis. Consult a physician.")
+    if anemia.get('result') == 'Anemic':
+        recs.append("⚠️ Anemia markers detected. Consult a haematologist for a Full Blood Count (FBC) test.")
+    else:
+        recs.append("✅ Hemoglobin levels appear normal based on visual analysis.")
+        
+    if diabetes.get('result') == 'Diabetic':
+        recs.append("⚠️ Diabetic markers detected. Schedule an HbA1c test to confirm blood sugar levels.")
+    else:
+        recs.append("✅ Retina/Skin analysis shows low risk indicators for diabetes.")
+        
+    recs.append("⚕️ This AI screening tool is not a substitute for a clinical diagnosis. Consult a physician.")
     return recs

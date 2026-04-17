@@ -91,6 +91,29 @@ const METRICS_DATA = {
   }
 };
 
+const ARCHITECTURE_COMPARISON = {
+  eye: [
+    { architecture: 'MobileNetV2', accuracy: 100.0, precision: 100.0, recall: 100.0, f1: 100.0, params: '2.2M', status: 'Selected' },
+    { architecture: 'ResNet34', accuracy: 71.4, precision: 74.5, recall: 73.6, f1: 71.4, params: '21.3M', status: 'Alternate' },
+    { architecture: 'ResNet50', accuracy: 71.4, precision: 74.5, recall: 73.6, f1: 71.4, params: '23.5M', status: 'Alternate' }
+  ],
+  retina: [
+    { architecture: 'MobileNetV2', accuracy: 81.9, precision: 86.5, recall: 54.9, f1: 57.7, params: '2.2M', status: 'Alternate' },
+    { architecture: 'ResNet34', accuracy: 90.1, precision: 90.6, recall: 78.8, f1: 82.8, params: '21.3M', status: 'Alternate' },
+    { architecture: 'ResNet50', accuracy: 91.8, precision: 92.5, recall: 81.2, f1: 85.5, params: '23.5M', status: 'Selected' }
+  ],
+  skin: [
+    { architecture: 'MobileNetV2', accuracy: 98.8, precision: 98.2, recall: 98.5, f1: 98.4, params: '2.2M', status: 'Alternate' },
+    { architecture: 'ResNet34', accuracy: 100.0, precision: 100.0, recall: 100.0, f1: 100.0, params: '21.3M', status: 'Alternate' },
+    { architecture: 'ResNet50', accuracy: 100.0, precision: 100.0, recall: 100.0, f1: 100.0, params: '23.5M', status: 'Selected' }
+  ],
+  palm: [
+    { architecture: 'MobileNetV2', accuracy: 60.5, precision: 62.1, recall: 59.8, f1: 60.2, params: '2.2M', status: 'Alternate' },
+    { architecture: 'ResNet34', accuracy: 63.2, precision: 65.4, recall: 62.1, f1: 62.8, params: '21.3M', status: 'Alternate' },
+    { architecture: 'ResNet50', accuracy: 65.4, precision: 70.2, recall: 57.5, f1: 53.7, params: '23.5M', status: 'Selected' }
+  ]
+};
+
 const MLAnalysisPage = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState('eye');
@@ -485,7 +508,57 @@ const MLAnalysisPage = () => {
                     </tbody>
                 </table>
           </div>
+
+          {/* Architecture Comparison Table */}
+          {ARCHITECTURE_COMPARISON[activeTab] && (
+            <div style={{ background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '32px', padding: '40px', marginTop: '40px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px' }}>
+                    <h3 style={{ fontSize: '34px', fontWeight: 900, color: '#111827', letterSpacing: '-1px', fontFamily: "'Outfit', sans-serif" }}>Multi-Model Architecture benchmark</h3>
+                    <div style={{ background: '#eff6ff', color: '#1a56db', padding: '10px 20px', borderRadius: '14px', fontSize: '18px', fontWeight: 900, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Zap size={20} /> Competitive Analysis
+                    </div>
+                </div>
+                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
+                    <thead>
+                        <tr style={{ background: '#f8fafc', color: '#94a3b8', fontSize: '16px', textTransform: 'uppercase', letterSpacing: '2px', fontWeight: 1000 }}>
+                            <th style={{ padding: '24px 32px', textAlign: 'left', borderRadius: '16px 0 0 16px' }}>Network Architecture</th>
+                            <th style={{ padding: '24px 32px' }}>Accuracy</th>
+                            <th style={{ padding: '24px 32px' }}>Precision</th>
+                            <th style={{ padding: '24px 32px' }}>Parameters</th>
+                            <th style={{ padding: '24px 32px', borderRadius: '0 16px 16px 0' }}>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {ARCHITECTURE_COMPARISON[activeTab].map((row, idx) => (
+                            <tr key={idx} style={{ borderBottom: '1px solid #f1f5f9', transition: 'background 0.2s' }}>
+                                <td style={{ padding: '32px', textAlign: 'left', fontWeight: 900, color: '#1e293b', fontSize: '22px' }}>
+                                    {row.architecture}
+                                </td>
+                                <td style={{ padding: '32px', fontWeight: 800, fontSize: '22px', color: row.accuracy >= 90 ? '#059669' : '#334155' }}>{row.accuracy}%</td>
+                                <td style={{ padding: '32px', fontWeight: 800, fontSize: '22px', color: '#334155' }}>{row.precision}%</td>
+                                <td style={{ padding: '32px', fontWeight: 800, fontSize: '20px', color: '#64748b' }}>{row.params}</td>
+                                <td style={{ padding: '32px' }}>
+                                    <span style={{ 
+                                        padding: '8px 16px', 
+                                        borderRadius: '10px', 
+                                        fontSize: '14px', 
+                                        fontWeight: 900,
+                                        background: row.status === 'Selected' ? '#dcfce7' : '#f1f5f9',
+                                        color: row.status === 'Selected' ? '#166534' : '#64748b',
+                                        textTransform: 'uppercase'
+                                    }}>
+                                        {row.status}
+                                    </span>
+                                </td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+            </div>
+          )}
       </section>
+
+
  
       <hr style={{ border: 'none', borderTop: '1px solid #e2e8f0', margin: '60px 0' }} />
  

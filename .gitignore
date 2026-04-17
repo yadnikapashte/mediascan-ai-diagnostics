@@ -8,14 +8,16 @@ __pycache__/
 .env
 .DS_Store
 *.log
+mediascan/backend/uploads/
+tmp/
 
 # Build & Dist
 dist/
 build/
 
 # Redundant App Folders (Active code is in mediascan/)
-backend/
-frontend/
+/backend/
+/frontend/
 
 # Large Datasets & Internal Project Data
 SB_Project/data/

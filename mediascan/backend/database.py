@@ -95,9 +95,16 @@ class Prediction(db.Model):
 
     def to_dict(self):
         # Determine primary URLs based on model_type
-        image_key = self.model_type if self.model_type in ['eye', 'palm', 'retina', 'skin'] else 'eye'
-        image_path = getattr(self, f"{image_key}_image_path")
-        gradcam_path = getattr(self, f"{image_key}_gradcam_path")
+        # For single scans, we use the specific model. For fusion, we pick the first available image.
+        image_key = self.model_type if self.model_type in ['eye', 'palm', 'retina', 'skin'] else None
+        
+        if image_key:
+            image_path = getattr(self, f"{image_key}_image_path")
+            gradcam_path = getattr(self, f"{image_key}_gradcam_path")
+        else:
+            # Multi-image/Fusion fallback: Pick the first non-null available path
+            image_path = self.eye_image_path or self.palm_image_path or self.retina_image_path or self.skin_image_path
+            gradcam_path = self.eye_gradcam_path or self.palm_gradcam_path or self.retina_gradcam_path or self.skin_gradcam_path
         
         # Primary confidence based on model_type
         if self.model_type == 'eye':
@@ -179,16 +186,16 @@ class Prediction(db.Model):
             'recommendations': " • ".join(recs_list),
             'interpretation': f"Final neural consensus identified {primary_stat} markers in the {self.model_type} domain. Clinical risk is assessed as {primary_risk}.",
             'images': {
-                'eye': self.eye_image_path,
-                'palm': self.palm_image_path,
-                'retina': self.retina_image_path,
-                'skin': self.skin_image_path
+                'eye': f"/api/uploads/{self.eye_image_path}" if self.eye_image_path else None,
+                'palm': f"/api/uploads/{self.palm_image_path}" if self.palm_image_path else None,
+                'retina': f"/api/uploads/{self.retina_image_path}" if self.retina_image_path else None,
+                'skin': f"/api/uploads/{self.skin_image_path}" if self.skin_image_path else None
             },
             'gradcams': {
-                'eye': self.eye_gradcam_path,
-                'palm': self.palm_gradcam_path,
-                'retina': self.retina_gradcam_path,
-                'skin': self.skin_gradcam_path
+                'eye': f"/api/uploads/{self.eye_gradcam_path}" if self.eye_gradcam_path else None,
+                'palm': f"/api/uploads/{self.palm_gradcam_path}" if self.palm_gradcam_path else None,
+                'retina': f"/api/uploads/{self.retina_gradcam_path}" if self.retina_gradcam_path else None,
+                'skin': f"/api/uploads/{self.skin_gradcam_path}" if self.skin_gradcam_path else None
             },
             'results': {
                 'eye': {'prediction': self.eye_prediction, 'confidence': self.eye_confidence},
@@ -205,6 +212,21 @@ class Prediction(db.Model):
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'status': getattr(self, 'status', 'completed')
         }
+        
+        # Build Multi-Image List (Domain, Scan, GradCAM triplet)
+        multi_images = []
+        for domain in ['eye', 'palm', 'retina', 'skin']:
+            img_path = getattr(self, f"{domain}_image_path")
+            grad_path = getattr(self, f"{domain}_gradcam_path")
+            if img_path:
+                multi_images.append({
+                    'domain': domain,
+                    'image_url': f"/api/uploads/{img_path}",
+                    'heatmap_url': f"/api/uploads/{grad_path}" if grad_path else None,
+                    'name': f"{domain.capitalize()} Analysis"
+                })
+        data['multi_images'] = multi_images
+        
         return data
 
 def init_db(app):

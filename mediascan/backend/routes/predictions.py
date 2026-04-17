@@ -24,6 +24,26 @@ from models.ai_models import (
 
 predictions_bp = Blueprint('predictions', __name__)
 
+@predictions_bp.route('/model-status', methods=['GET'])
+def model_status():
+    """Returns live status of all loaded AI models in the running process."""
+    from models.ai_models import model_manager, CLASSES
+    status = {}
+    for model_key in ['eye', 'palm', 'retina', 'skin']:
+        is_loaded = model_manager.get_model(model_key) is not None
+        status[model_key] = {
+            'loaded': is_loaded,
+            'mode': 'real_model' if is_loaded else 'demo_fallback',
+            'classes': CLASSES.get(model_key, []),
+            'num_classes': len(CLASSES.get(model_key, []))
+        }
+    all_loaded = all(v['loaded'] for v in status.values())
+    return jsonify({
+        'overall': 'all_models_live' if all_loaded else 'partial_or_demo',
+        'models': status
+    }), 200
+
+
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'bmp'}
 
 def allowed_file(filename):
@@ -133,11 +153,11 @@ def analyze():
                 filename = secure_filename(f"{session_id}_eye_{f.filename}")
                 path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'eye', filename)
                 f.save(path)
-                paths['eye'] = path
+                paths['eye'] = f"eye/{filename}"
                 grad_filename = f"gradcam_{filename}"
                 grad_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'gradcam', grad_filename)
                 eye_res = predict_eye_anemia(path, grad_path)
-                paths['eye_gradcam'] = grad_path
+                paths['eye_gradcam'] = f"gradcam/{grad_filename}"
                 upload_results['eye'] = eye_res
 
             if 'palm_image' in files and allowed_file(files['palm_image'].filename):
@@ -145,11 +165,11 @@ def analyze():
                 filename = secure_filename(f"{session_id}_palm_{f.filename}")
                 path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'palm', filename)
                 f.save(path)
-                paths['palm'] = path
+                paths['palm'] = f"palm/{filename}"
                 grad_filename = f"gradcam_{filename}"
                 grad_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'gradcam', grad_filename)
                 palm_res = predict_palm_anemia(path, grad_path)
-                paths['palm_gradcam'] = grad_path
+                paths['palm_gradcam'] = f"gradcam/{grad_filename}"
                 upload_results['palm'] = palm_res
 
             if 'retina_image' in files and allowed_file(files['retina_image'].filename):
@@ -157,11 +177,11 @@ def analyze():
                 filename = secure_filename(f"{session_id}_retina_{f.filename}")
                 path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'retina', filename)
                 f.save(path)
-                paths['retina'] = path
+                paths['retina'] = f"retina/{filename}"
                 grad_filename = f"gradcam_{filename}"
                 grad_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'gradcam', grad_filename)
                 retina_res = predict_retina_diabetes(path, grad_path)
-                paths['retina_gradcam'] = grad_path
+                paths['retina_gradcam'] = f"gradcam/{grad_filename}"
                 upload_results['retina'] = retina_res
 
             if 'skin_image' in files and allowed_file(files['skin_image'].filename):
@@ -169,11 +189,11 @@ def analyze():
                 filename = secure_filename(f"{session_id}_skin_{f.filename}")
                 path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'skin', filename)
                 f.save(path)
-                paths['skin'] = path
+                paths['skin'] = f"skin/{filename}"
                 grad_filename = f"gradcam_{filename}"
                 grad_path = os.path.join(current_app.config['UPLOAD_FOLDER'], 'gradcam', grad_filename)
                 skin_res = predict_skin_dfu(path, grad_path)
-                paths['skin_gradcam'] = grad_path
+                paths['skin_gradcam'] = f"gradcam/{grad_filename}"
                 upload_results['skin'] = skin_res
 
         if not upload_results:
@@ -319,13 +339,36 @@ def delete_prediction(pred_id):
 @jwt_required()
 def get_user_stats():
     user_id = get_jwt_identity()
-    scans = Prediction.query.filter_by(user_id=user_id).all()
+    scans = Prediction.query.filter_by(user_id=user_id).order_by(Prediction.created_at.asc()).all()
+    
+    # Authoritative Counts
+    anemia_detected = len([s for s in scans if s.model_type in ['eye', 'palm'] and s.anemia_result == 'Anemic'])
+    diabetes_detected = len([s for s in scans if s.model_type == 'retina' and s.diabetes_result == 'Diabetic'])
+    dfu_detected = len([s for s in scans if s.model_type == 'skin' and s.dfu_result == 'Abnormal(Ulcer)'])
+    
+    # Trend Analysis: Group by Day (Last 7 days)
+    trend_map = {}
+    for scan in scans:
+        date_str = scan.created_at.strftime('%b %d')
+        if date_str not in trend_map:
+            trend_map[date_str] = {'date': date_str, 'Anemia': 0, 'Diabetes': 0}
+        
+        if scan.model_type in ['eye', 'palm'] and scan.anemia_result == 'Anemic':
+            trend_map[date_str]['Anemia'] += 1
+        if (scan.model_type == 'retina' and scan.diabetes_result == 'Diabetic') or \
+           (scan.model_type == 'skin' and scan.dfu_result == 'Abnormal(Ulcer)'):
+            trend_map[date_str]['Diabetes'] += 1
+            
+    # Sort and take last 7
+    sorted_trends = sorted(trend_map.values(), key=lambda x: datetime.strptime(x['date'], '%b %d'))
+    trend_data = sorted_trends[-7:]
     
     return jsonify({
         'total_scans': len(scans),
-        'anemia_detected': len([s for s in scans if s.model_type in ['eye', 'palm'] and s.anemia_result == 'Anemic']),
-        'diabetes_detected': len([s for s in scans if s.model_type == 'retina' and s.diabetes_result == 'Diabetic']),
-        'dfu_detected': len([s for s in scans if s.model_type == 'skin' and s.dfu_result == 'Abnormal(Ulcer)']),
+        'anemia_detected': anemia_detected,
+        'diabetes_detected': diabetes_detected,
+        'dfu_detected': dfu_detected,
         'high_risk_cases': len([s for s in scans if s.overall_risk == 'High']),
-        'healthy_cases': len([s for s in scans if s.overall_risk == 'Low'])
+        'healthy_cases': len(scans) - (anemia_detected + diabetes_detected + dfu_detected),
+        'trends': trend_data
     }), 200

@@ -86,6 +86,8 @@ METRICS = {
   }
 }
 
+
+
 INTERPRETATIONS = {
   'eye':    'Pallor detected in conjunctival region suggesting reduced hemoglobin levels',
   'palm':   'Surface thermal/color pattern indicates physiological anemia signs',
@@ -134,29 +136,27 @@ def generate_gradcam():
             'skin': predict_skin_dfu
         }
         
-        # Logic to return real GradCAM path
-        gradcam_save_filename = f"gradcam_{int(time.time())}.png"
-        os.makedirs('uploads/gradcam', exist_ok=True)
-        gradcam_save_path = os.path.join('uploads/gradcam', gradcam_save_filename)
+        predict_func = model_map.get(model_type, predict_eye_anemia)
+        res = predict_func(temp_path, grad_path)
         
-        res = predictors[model_type](temp_path, gradcam_save_path)
+        if res.get('status') == 'failed':
+            return jsonify({'error': res.get('error')}), 500
+
+        # Read the generated gradcam image
+        with open(grad_path, "rb") as image_file:
+            gradcam_base64 = f"data:image/jpeg;base64,{base64.b64encode(image_file.read()).decode('utf-8')}"
         
-        if res['status'] == 'success':
-            # Create base64 versions for the live forensic viewer
-            gradcam_b64 = encode_image(gradcam_save_path)
-            original_b64 = encode_image(temp_path)
-            
-            return jsonify({
-                'prediction': res['prediction'],
-                'confidence': res['confidence'],
-                'gradcam_url': f"/api/uploads/gradcam/{gradcam_save_filename}",
-                'gradcam_image_base64': gradcam_b64,
-                'original_image_base64': original_b64,
-                'interpretation': INTERPRETATIONS.get(model_type, "Diagnostic pattern detected."),
-                'demo_mode': res.get('demo_mode', False)
-            }), 200
-        else:
-            return jsonify({'error': res.get('error', 'Inference failed')}), 500
+        with open(temp_path, "rb") as image_file:
+            original_base64 = f"data:image/jpeg;base64,{base64.b64encode(image_file.read()).decode('utf-8')}"
+        
+        return jsonify({
+            'prediction': res['prediction'],
+            'confidence': res['confidence'],
+            'gradcam_image_base64': gradcam_base64,
+            'original_image_base64': original_base64,
+            'interpretation': INTERPRETATIONS.get(model_type, "Diagnostic pattern detected."),
+            'demo_mode': res.get('demo_mode', False)
+        }), 200
         
     except Exception as e:
         return jsonify({'error': str(e)}), 500

@@ -36,7 +36,8 @@
     "risk_high": "HIGH",
     "risk_medium": "MEDIUM",
     "risk_low": "LOW",
-    "syncing": "Synchronizing clinical intelligence..."
+    "syncing": "Synchronizing clinical intelligence...",
+    "awaiting_diag": "Loading Analysis Report..."
   },
   "scan": {
     "heading": "New Diagnostic Scan",
@@ -558,7 +559,7 @@
       "palm_anemia": "The AI analyzed the skin color and texture of your palm. A healthy palm has pink coloration from blood flow through capillaries. Pale or yellowish palms indicate reduced red blood cells — a sign of anemia. The model detected reduced erythema in your palm.",
       "retina_diabetes": "The AI examined your retinal (fundus) image for signs of diabetic retinopathy. It looked for microaneurysms (tiny bulges in blood vessels), hemorrhages, and abnormal new vessel growth — all early signs of diabetes affecting the eyes.",
       "skin_dfu": "The AI analyzed your skin/foot wound image for Diabetic Foot Ulcer markers. It identified wound margin characteristics, tissue coloration patterns, and signs of poor healing typically associated with diabetic foot complications.",
-      "summary_desc": "Our AI detected signs of {{diagnosis}} in your {{type}} image. Your risk level is assessed as {{risk}}."
+      "summary_desc": "Scan type: {{type}} image. Primary clinical focus: {{diagnosis}}. AI risk assessment outcome: {{risk}}."
     },
     "action_plan": {
       "title": "Your Action Plan",

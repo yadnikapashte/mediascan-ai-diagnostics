@@ -13,55 +13,74 @@ import {
 const DiagnosticView = ({ result, isHistoryView = false }) => {
     if (!result) return null;
 
+    const displayItems = (result.multi_images && result.multi_images.length > 0) 
+        ? result.multi_images 
+        : [{
+            image_url: result.original_image_base64 || result.image_url,
+            heatmap_url: result.gradcam_image_base64 || result.heatmap_url,
+            name: "Neural Scan"
+          }];
+
     return (
         <div style={{ width: '100%', animation: 'fadeIn 0.6s ease' }}>
-            <div style={{ display: 'grid', gridTemplateColumns: 'minmax(400px, 1fr) minmax(400px, 1fr)', gap: '48px', marginBottom: '48px' }}>
-                <div style={panelStyle} className="premium-card-hover">
-                    <div style={panelHeader}>AI Heatmap (GradCAM)</div>
-                    <div style={panelBody}>
-                        {result.gradcam_image_base64 || result.heatmap_url ? (
-                            <>
-                                <img 
-                                    src={result.gradcam_image_base64 || result.heatmap_url} 
-                                    alt="GradCAM Heatmap" 
-                                    style={imgFit} 
-                                />
-                                <div style={{ marginTop: '24px' }}>
-                                    <div style={{ height: '12px', width: '100%', borderRadius: '6px', background: 'linear-gradient(to right, #3b82f6, #22c55e, #eab308, #ef4444)' }}></div>
-                                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', color: '#64748b', marginTop: '16px', fontWeight: 900, letterSpacing: '1px', fontFamily: "'Outfit', sans-serif" }}>
-                                        <span>LOW ATTENTION</span>
-                                        <span>CRITICAL CLINICAL FOCUS</span>
+            {displayItems.map((item, index) => (
+                <div key={index} style={{ marginBottom: index === displayItems.length - 1 ? '48px' : '64px' }}>
+                    {displayItems.length > 1 && (
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                           <div style={{ padding: '4px 12px', background: '#eff6ff', borderRadius: '8px', fontSize: '14px', fontWeight: 900, color: '#1a56db', textTransform: 'uppercase' }}>Source {index + 1}</div>
+                           <h3 style={{ fontSize: '24px', fontWeight: 900, color: '#1e293b', fontFamily: "'Outfit', sans-serif" }}>{item.name}</h3>
+                        </div>
+                    )}
+                    <div style={{ display: 'grid', gridTemplateColumns: 'minmax(400px, 1fr) minmax(400px, 1fr)', gap: '48px' }}>
+                        <div style={panelStyle} className="premium-card-hover">
+                            <div style={panelHeader}>AI Heatmap (GradCAM)</div>
+                            <div style={panelBody}>
+                                {item.heatmap_url ? (
+                                    <>
+                                        <img 
+                                            src={item.heatmap_url} 
+                                            alt="GradCAM Heatmap" 
+                                            style={imgFit} 
+                                        />
+                                        <div style={{ marginTop: '24px' }}>
+                                            <div style={{ height: '12px', width: '100%', borderRadius: '6px', background: 'linear-gradient(to right, #3b82f6, #22c55e, #eab308, #ef4444)' }}></div>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '18px', color: '#64748b', marginTop: '16px', fontWeight: 900, letterSpacing: '1px', fontFamily: "'Outfit', sans-serif" }}>
+                                                <span>LOW ATTENTION</span>
+                                                <span>CRITICAL CLINICAL FOCUS</span>
+                                            </div>
+                                        </div>
+                                    </>
+                                ) : (
+                                    <div style={emptyStateStyle}>
+                                        <Activity size={64} color="#e2e8f0" />
+                                        <p style={{ marginTop: '16px', color: '#94a3b8', fontWeight: 600 }}>Heatmap generation pending or unavailable for this record</p>
                                     </div>
-                                </div>
-                            </>
-                        ) : (
-                            <div style={emptyStateStyle}>
-                                <Activity size={64} color="#e2e8f0" />
-                                <p style={{ marginTop: '16px', color: '#94a3b8', fontWeight: 600 }}>Heatmap generation pending or unavailable for this record</p>
+                                )}
                             </div>
-                        )}
-                    </div>
-                </div>
+                        </div>
 
-                {/* Scan Image Panel */}
-                <div style={panelStyle} className="premium-card-hover">
-                    <div style={panelHeader}>Scan Image</div>
-                    <div style={panelBody}>
-                        {result.original_image_base64 || result.image_url ? (
-                            <img 
-                                src={result.original_image_base64 || result.image_url} 
-                                alt="Original Medical Scan" 
-                                style={imgFit} 
-                            />
-                        ) : (
-                            <div style={emptyStateStyle}>
-                                <Search size={64} color="#e2e8f0" />
-                                <p style={{ marginTop: '16px', color: '#94a3b8', fontWeight: 600 }}>Original forensic scan not linked to this report</p>
+                        {/* Scan Image Panel */}
+                        <div style={panelStyle} className="premium-card-hover">
+                            <div style={panelHeader}>Scan Image</div>
+                            <div style={panelBody}>
+                                {item.image_url ? (
+                                    <img 
+                                        src={item.image_url} 
+                                        alt="Original Medical Scan" 
+                                        style={imgFit} 
+                                    />
+                                ) : (
+                                    <div style={emptyStateStyle}>
+                                        <Search size={64} color="#e2e8f0" />
+                                        <p style={{ marginTop: '16px', color: '#94a3b8', fontWeight: 600 }}>Original forensic scan not linked to this report</p>
+                                    </div>
+                                )}
                             </div>
-                        )}
+                        </div>
                     </div>
+                    {index < displayItems.length - 1 && <hr style={{ border: 'none', borderTop: '2px dashed #f1f5f9', margin: '48px 0' }} />}
                 </div>
-            </div>
+            ))}
 
             {/* Neural Justification Suite */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '32px' }}>

@@ -11,7 +11,8 @@ import {
   TrendingUp,
   Microscope,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  Layers
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
@@ -20,228 +21,270 @@ import { mlAPI, predictionsAPI } from '../utils/api';
 const ScanPage = () => {
     const navigate = useNavigate();
     const { t } = useTranslation();
+    
+    // Single Scan State
     const [selectedFile, setSelectedFile] = useState(null);
     const [modelType, setModelType] = useState('auto');
+    
+    // Multi Scan State
+    const [specializedFiles, setSpecializedFiles] = useState({
+        eye: null, palm: null, retina: null, skin: null
+    });
+
     const [isAnalyzing, setIsAnalyzing] = useState(false);
-    const [detectedType, setDetectedType] = useState(null);
 
     const handleFileSelect = (e) => {
         const file = e.target.files[0];
         if (file) {
             setSelectedFile(file);
-            toast.success("Medical image linked successfully");
+            toast.success("Medical scan linked successfully");
+        }
+    };
+
+    const handleSpecializedSelect = (domain, file) => {
+        if (file) {
+            setSpecializedFiles(prev => ({ ...prev, [domain]: file }));
+            toast.success(`${domain.toUpperCase()} scan linked`);
         }
     };
 
     const handleReset = () => {
         setSelectedFile(null);
+        setSpecializedFiles({ eye: null, palm: null, retina: null, skin: null });
+        setModelType('auto');
     };
 
-    const handleStartAnalysis = async () => {
-        if (!selectedFile) return;
+    const handleStartAnalysis = async (mode) => {
+        const isMulti = mode === 'multi';
+        const activeSpecialized = Object.entries(specializedFiles).filter(([_, f]) => f !== null);
+
+        if (!isMulti && !selectedFile) {
+            toast.error("Please provide a medical scan.");
+            return;
+        }
+        if (isMulti && activeSpecialized.length === 0) {
+            toast.error("Please provide at least one source scan.");
+            return;
+        }
         
         setIsAnalyzing(true);
         const formData = new FormData();
-        formData.append('image', selectedFile);
-        formData.append('model_type', modelType);
+        
+        if (!isMulti) {
+            formData.append('image', selectedFile);
+            formData.append('model_type', modelType);
+        } else {
+            activeSpecialized.forEach(([domain, file]) => {
+                formData.append(`${domain}_image`, file);
+            });
+            formData.append('model_type', 'multi');
+        }
 
         try {
             const res = await predictionsAPI.analyze(formData);
-            if (res.data.detected_domain && modelType === 'auto') {
-                setDetectedType(res.data.detected_domain);
-                toast.success(`${t('scan.ai_detected')}: ${res.data.detected_domain.toUpperCase()}`);
-                // Short delay to show detection result
-                setTimeout(() => {
-                    navigate(`/results/${res.data.prediction_id}`);
-                }, 1500);
-            } else {
-                toast.success(t('scan.analysis_complete'));
-                navigate(`/results/${res.data.prediction_id}`);
-            }
+            toast.success(t('scan.analysis_complete'));
+            navigate(`/results/${res.data.prediction_id}`);
         } catch (err) {
             console.error("Diagnostic failure", err);
-            toast.error("Neural analysis pipeline failure. Please retry.");
+            toast.error("Neural analysis pipeline failure. Ensure models are online.");
         } finally {
             setIsAnalyzing(false);
         }
     };
 
     const modelOptions = [
-        { id: 'auto', name: t('scan.models.auto'), icon: <Zap />, desc: t('scan.models.auto_desc'), premium: true },
-        { id: 'eye', name: t('scan.models.eye'), icon: <Eye />, desc: t('scan.models.eye_desc') },
-        { id: 'palm', name: t('scan.models.palm'), icon: <TrendingUp />, desc: t('scan.models.palm_desc') },
-        { id: 'retina', name: t('scan.models.retina'), icon: <Microscope />, desc: t('scan.models.retina_desc') },
-        { id: 'skin', name: t('scan.models.skin'), icon: <Footprints />, desc: t('scan.models.skin_desc') }
+        { id: 'auto', name: 'Auto-Detect', icon: <Zap />, desc: 'AI automatically identifies domain' },
+        { id: 'eye', name: 'Eye Anemia', icon: <Eye />, desc: 'Detect conjunctiva clinical signs' },
+        { id: 'palm', name: 'Palm Anemia', icon: <TrendingUp />, desc: 'Analyze palmar creases' },
+        { id: 'retina', name: 'Retina Diabetes', icon: <Microscope />, desc: 'Detect diabetic retinopathy' },
+        { id: 'skin', name: 'DFU Skin', icon: <Footprints />, desc: 'Analyze foot ulcer risk' }
     ];
 
     return (
         <div style={{ 
-            width: '100%', margin: '0 auto', padding: '48px 5vw',
-            animation: 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)' 
+            width: '100%', margin: '0 auto', padding: '40px 5vw',
+            animation: 'fadeIn 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
+            minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: '60px'
         }}>
-            {/* Header */}
-            <div style={{ marginBottom: '52px', borderBottom: '1px solid #e2e8f0', paddingBottom: '40px' }}>
-                <h1 style={{ 
-                    fontSize: '56px', fontWeight: 900, color: '#111827', 
-                    fontFamily: "'Outfit', sans-serif", marginBottom: '12px',
-                    letterSpacing: '-2px'
-                }}>
-                    {t('scan.heading')}
+            {/* Page Header */}
+            <div>
+                <h1 style={{ fontSize: '48px', fontWeight: 900, color: '#111827', fontFamily: "'Outfit', sans-serif", marginBottom: '8px', letterSpacing: '-2px' }}>
+                    Diagnostic Command Center
                 </h1>
-                <p style={{ fontSize: '24px', color: '#64748b', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
-                    {t('scan.subtitle')}
+                <p style={{ fontSize: '20px', color: '#6b7280', fontFamily: "'DM Sans', sans-serif", fontWeight: 500 }}>
+                    Upload medical imaging for single-source analysis or multi-model fusion.
                 </p>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '48px' }}>
-                {/* Upload Zone */}
-                <div>
-                    <div style={{ 
-                        background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '32px',
-                        padding: '48px', minHeight: '520px', display: 'flex', flexDirection: 'column',
-                        boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)'
-                    }}>
-                        <div style={{ marginBottom: '40px', display: 'flex', alignItems: 'center', gap: '20px' }}>
-                            <div style={{ width: '64px', height: '64px', background: '#eff6ff', borderRadius: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                                <Upload size={32} color="#1a56db" />
-                            </div>
-                            <h3 style={{ fontSize: '34px', fontWeight: 900, color: '#111827', fontFamily: "'Outfit', sans-serif", letterSpacing: '-1.5px' }}>{t('scan.upload_title')}</h3>
-                        </div>
-
-                        {!selectedFile ? (
-                            <div 
-                                onClick={() => document.getElementById('scan-upload').click()}
-                                style={{
-                                    flex: 1, border: '3px dashed #cbd5e1', background: '#f8fafc',
-                                    borderRadius: '24px', display: 'flex', flexDirection: 'column',
-                                    alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
-                                    transition: 'all 0.3s ease'
-                                }}
-                                onMouseOver={(e) => { e.currentTarget.style.borderColor = '#1a56db'; e.currentTarget.style.background = '#eff6ff'; }}
-                                onMouseOut={(e) => { e.currentTarget.style.borderColor = '#cbd5e1'; e.currentTarget.style.background = '#f8fafc'; }}
-                            >
-                                <input id="scan-upload" type="file" hidden onChange={handleFileSelect} accept="image/*" />
-                                <div style={{ 
-                                    width: '120px', height: '120px', background: '#fff', borderRadius: '36px',
-                                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                    boxShadow: '0 12px 32px rgba(0,0,0,0.08)', marginBottom: '40px'
-                                }}>
-                                    <Activity size={64} color="#1a56db" />
-                                </div>
-                                <div style={{ fontSize: '32px', fontWeight: 900, color: '#111827', fontFamily: "'Outfit', sans-serif", letterSpacing: '-1px' }}>{t('scan.source_upload')}</div>
-                                <div style={{ fontSize: '24px', color: '#64748b', marginTop: '16px', fontWeight: 600, fontFamily: "'DM Sans', sans-serif" }}>{t('scan.drop_desc')}</div>
-                            </div>
-                        ) : (
-                            <div style={{ flex: 1, position: 'relative', overflow: 'hidden', borderRadius: '24px' }}>
-                                <img src={URL.createObjectURL(selectedFile)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                <button 
-                                    onClick={handleReset}
-                                    style={{
-                                        position: 'absolute', top: '20px', right: '20px',
-                                        width: '44px', height: '44px', borderRadius: '12px',
-                                        background: 'rgba(255, 255, 255, 0.9)', backdropFilter: 'blur(8px)',
-                                        border: 'none', cursor: 'pointer', display: 'flex', 
-                                        alignItems: 'center', justifyContent: 'center', color: '#ef4444',
-                                        boxShadow: '0 4px 12px rgba(0,0,0,0.1)'
-                                    }}
-                                >
-                                    <X size={24} />
-                                </button>
-                                <div style={{
-                                    position: 'absolute', bottom: '24px', left: '24px', right: '24px',
-                                    padding: '24px', borderRadius: '20px', background: 'rgba(255,255,255,0.95)',
-                                    backdropFilter: 'blur(12px)', boxShadow: '0 12px 24px rgba(0,0,0,0.12)'
-                                }}>
-                                    <div style={{ fontWeight: 900, fontSize: '22px', color: '#111827', fontFamily: "'DM Sans', sans-serif" }}>{selectedFile.name}</div>
-                                    <div style={{ fontSize: '18px', color: '#64748b', fontWeight: 600, fontFamily: "'DM Sans', sans-serif", marginTop: '6px' }}>{(selectedFile.size / 1024 / 1024).toFixed(2)} MB Medical Scan</div>
-                                </div>
-                            </div>
-                        )}
+            {/* SECTION 1: SINGLE SCAN FLOW */}
+            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '40px', padding: '48px', boxShadow: '0 4px 24px rgba(0,0,0,0.02)' }}>
+                <div style={{ marginBottom: '32px', display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <div style={{ width: '52px', height: '52px', background: 'linear-gradient(135deg, #1a56db, #2563eb)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                        <Zap size={28} />
+                    </div>
+                    <div>
+                        <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#111827', fontFamily: "'Outfit', sans-serif" }}>Single Image Scan</h2>
+                        <p style={{ fontSize: '18px', color: '#64748b', fontWeight: 600 }}>Standard analysis for quick results</p>
                     </div>
                 </div>
 
-                {/* Configuration Zone */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
-                    <div style={{ 
-                        background: '#ffffff', border: '1px solid #e2e8f0', borderRadius: '32px',
-                        padding: '48px', boxShadow: '0 4px 6px -1px rgba(0,0,0,0.02)'
-                    }}>
-                        <h3 style={{ fontSize: '34px', fontWeight: 900, color: '#111827', marginBottom: '32px', fontFamily: "'Outfit', sans-serif", letterSpacing: '-1.5px' }}>{t('scan.intelligence_selection')}</h3>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)', gap: '40px' }}>
+                    {/* Upload Card */}
+                    <div 
+                        onClick={() => !selectedFile && document.getElementById('single-upload').click()}
+                        style={{
+                            minHeight: '420px', border: '3px dashed #cbd5e1', background: '#f8fafc',
+                            borderRadius: '32px', display: 'flex', flexDirection: 'column',
+                            alignItems: 'center', justifyContent: 'center', cursor: selectedFile ? 'default' : 'pointer',
+                            transition: '0.3s', position: 'relative', overflow: 'hidden'
+                        }}
+                    >
+                        <input id="single-upload" type="file" hidden onChange={handleFileSelect} accept="image/*" />
+                        {selectedFile ? (
+                            <>
+                                <img src={URL.createObjectURL(selectedFile)} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                <button onClick={(e) => { e.stopPropagation(); setSelectedFile(null); }} style={{ position: 'absolute', top: 20, right: 20, background: 'rgba(255,255,255,0.9)', border: 'none', padding: 10, borderRadius: 12, color: '#ef4444' }}><X size={22}/></button>
+                            </>
+                        ) : (
+                            <>
+                                <div style={{ width: '80px', height: '80px', background: '#fff', borderRadius: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', boxShadow: '0 8px 16px rgba(0,0,0,0.05)' }}>
+                                    <Upload size={40} color="#1a56db" />
+                                </div>
+                                <div style={{ marginTop: 24, fontSize: '24px', fontWeight: 800, color: '#111827' }}>Click to link single diagnostic scan</div>
+                            </>
+                        )}
+                    </div>
+
+                    {/* Options Card */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                             {modelOptions.map((opt) => (
                                 <div 
                                     key={opt.id}
                                     onClick={() => setModelType(opt.id)}
                                     style={{
-                                        padding: '22px 28px', borderRadius: '20px', cursor: 'pointer',
+                                        padding: '16px 20px', borderRadius: '18px', cursor: 'pointer',
                                         border: '2px solid', 
                                         borderColor: modelType === opt.id ? '#1a56db' : '#f1f5f9',
                                         background: modelType === opt.id ? '#eff6ff' : '#fff',
-                                        display: 'flex', alignItems: 'center', gap: '20px',
-                                        transition: '0.2s',
-                                        position: 'relative',
-                                        boxShadow: modelType === opt.id ? (opt.premium ? '0 15px 30px rgba(124, 58, 237, 0.15)' : '0 10px 15px rgba(26,86,219,0.05)') : 'none',
-                                        transform: modelType === opt.id ? 'scale(1.02)' : 'none'
+                                        display: 'flex', alignItems: 'center', gap: '16px',
+                                        transition: '0.2s'
                                     }}
                                 >
-                                    <div style={{ 
-                                        color: modelType === opt.id ? '#1a56db' : '#94a3b8',
-                                        transition: '0.2s'
-                                    }}>
-                                        {React.cloneElement(opt.icon, { size: 32, strokeWidth: modelType === opt.id ? 2.5 : 2 })}
+                                    <div style={{ color: modelType === opt.id ? '#1a56db' : '#94a3b8' }}>
+                                        {React.cloneElement(opt.icon, { size: 22 })}
                                     </div>
                                     <div style={{ flex: 1 }}>
-                                        <div style={{ fontWeight: 900, fontSize: '28px', color: modelType === opt.id ? '#1a56db' : '#111827', fontFamily: "'Outfit', sans-serif", letterSpacing: '-0.8px' }}>{opt.name}</div>
-                                        <div style={{ fontSize: '21px', color: '#64748b', fontWeight: 600, fontFamily: "'DM Sans', sans-serif", marginTop: '4px' }}>{opt.desc}</div>
+                                        <div style={{ fontWeight: 900, fontSize: '22px', color: modelType === opt.id ? '#1a56db' : '#111827' }}>{opt.name}</div>
+                                        <div style={{ fontSize: '16px', color: '#64748b', fontWeight: 600 }}>{opt.desc}</div>
                                     </div>
-                                    {modelType === opt.id && <CheckCircle2 size={32} color="#1a56db" />}
-                                    {opt.premium && (
-                                        <div style={{
-                                            position: 'absolute', top: '-12px', right: '20px',
-                                            background: 'linear-gradient(135deg, #1a56db, #7c3aed)',
-                                            color: '#fff', fontSize: '14px', fontWeight: 900,
-                                            padding: '4px 12px', borderRadius: '10px',
-                                            letterSpacing: '1px', boxShadow: '0 4px 12px rgba(124, 58, 237, 0.3)',
-                                            fontFamily: "'Outfit', sans-serif"
-                                        }}>AI POWERED</div>
-                                    )}
+                                    {modelType === opt.id && <CheckCircle2 size={18} color="#1a56db" />}
                                 </div>
                             ))}
                         </div>
 
-                        <button
-                            onClick={handleStartAnalysis}
+                        <button 
+                            onClick={() => handleStartAnalysis('single')}
                             disabled={!selectedFile || isAnalyzing}
                             style={{
-                                width: '100%', height: '84px', marginTop: '32px', border: 'none',
-                                borderRadius: '24px', background: selectedFile ? 'linear-gradient(135deg, #1a56db, #2563eb)' : '#f1f5f9',
-                                color: selectedFile ? '#fff' : '#94a3b8', fontWeight: 900,
-                                fontSize: '26px', cursor: selectedFile ? 'pointer' : 'not-allowed',
-                                transition: 'all 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
-                                boxShadow: selectedFile ? '0 12px 32px rgba(26,86,219,0.3)' : 'none',
-                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px',
-                                fontFamily: "'Outfit', sans-serif", letterSpacing: '0.8px'
+                                width: '100%', height: '76px', marginTop: '12px', border: 'none',
+                                borderRadius: '20px', background: selectedFile ? 'linear-gradient(135deg, #1a56db, #2563eb)' : '#f1f5f9',
+                                color: selectedFile ? '#fff' : '#94a3b8', fontSize: '28px', fontWeight: 900,
+                                cursor: selectedFile ? 'pointer' : 'not-allowed', boxShadow: selectedFile ? '0 10px 24px rgba(26,86,219,0.25)' : 'none',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px', transition: '0.3s'
                             }}
                         >
-                            {isAnalyzing ? (
-                                <><Activity className="animate-spin" size={34} /> {t('scan.analyzing')}</>
-                            ) : (
-                                <><Zap size={32} fill="currentColor" /> {t('scan.initialize_scan')}</>
-                            )}
+                            {isAnalyzing ? <Activity className="animate-spin" size={24} /> : <Zap size={22} fill="currentColor" />}
+                            {isAnalyzing ? "Processing..." : "Analyze Single Scan"}
                         </button>
                     </div>
+                </div>
+                
+                <div style={{ marginTop: '24px', background: '#fff7ed', border: '1px solid #ffedd5', borderRadius: '16px', padding: '20px', display: 'flex', gap: '14px', alignItems: 'center' }}>
+                    <AlertCircle color="#d97706" size={24} />
+                    <span style={{ fontSize: '18px', color: '#9a3412', fontWeight: 800 }}>Trained Neural Networks (TNN) prioritized — Indicative Results Only.</span>
+                </div>
+            </div>
 
-                    {/* Disclaimer */}
-                    <div style={{ 
-                        background: '#fff7ed', border: '1px solid #ffedd5', borderRadius: '28px',
-                        padding: '32px', display: 'flex', gap: '20px'
-                    }}>
-                        <AlertCircle color="#d97706" size={40} style={{ flexShrink: 0 }} />
-                        <div style={{ fontSize: '21px', color: '#9a3412', fontWeight: 600, lineHeight: 1.6, fontFamily: "'DM Sans', sans-serif" }}>
-                            <div style={{ fontWeight: 900, fontSize: '24px', marginBottom: '8px', fontFamily: "'Outfit', sans-serif" }}>{t('scan.disclaimer_title')}</div>
-                            {t('scan.disclaimer_text')}
+            {/* SECTION 2: MULTI-SOURCE CLINICAL FUSION */}
+            <div style={{ background: '#fff', border: '1px solid #e2e8f0', borderRadius: '40px', padding: '48px', boxShadow: '0 20px 50px rgba(0,0,0,0.03)' }}>
+                <div style={{ marginBottom: '32px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                        <div style={{ width: '52px', height: '52px', background: '#f8fafc', border: '1px solid #e2e8f0', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1a56db' }}>
+                            <Layers size={28} />
+                        </div>
+                        <div>
+                            <h2 style={{ fontSize: '32px', fontWeight: 900, color: '#111827', fontFamily: "'Outfit', sans-serif" }}>Clinical Panel (4-Image Fusion)</h2>
+                            <p style={{ fontSize: '18px', color: '#64748b', fontWeight: 600 }}>Advanced cross-verification for complex cases</p>
                         </div>
                     </div>
+                    {Object.values(specializedFiles).filter(f => f).length > 1 && (
+                        <div style={{ background: 'linear-gradient(135deg, #1a56db, #7c3aed)', color: '#fff', fontSize: '14px', fontWeight: 900, padding: '8px 18px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(124,58,237,0.3)' }}>NEURAL FUSION ACTIVE</div>
+                    )}
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '20px', marginBottom: '32px' }}>
+                    {[
+                        { id: 'eye', name: 'Ocular', icon: <Eye />, desc: 'Anemia' },
+                        { id: 'palm', name: 'Dermal', icon: <TrendingUp />, desc: 'Anemia' },
+                        { id: 'retina', name: 'Retinal', icon: <Microscope />, desc: 'Diabetes' },
+                        { id: 'skin', name: 'Pathology', icon: <Footprints />, desc: 'Ulcer/Diabetes' }
+                    ].map((slot) => (
+                        <div 
+                            key={slot.id}
+                            onClick={() => document.getElementById(`multi-upload-${slot.id}`).click()}
+                            style={{
+                                height: '220px', borderRadius: '28px', border: '2px solid',
+                                borderColor: specializedFiles[slot.id] ? '#1a56db' : '#f1f5f9',
+                                background: specializedFiles[slot.id] ? '#eff6ff' : '#fff',
+                                padding: '24px', cursor: 'pointer',
+                                display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
+                                transition: '0.3s', position: 'relative', overflow: 'hidden'
+                            }}
+                        >
+                            <input id={`multi-upload-${slot.id}`} type="file" hidden onChange={(e) => handleSpecializedSelect(slot.id, e.target.files[0])} accept="image/*" />
+                            {specializedFiles[slot.id] ? (
+                                <>
+                                    <img src={URL.createObjectURL(specializedFiles[slot.id])} style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '18px' }} />
+                                    <button 
+                                        onClick={(e) => { e.stopPropagation(); setSpecializedFiles(p => ({...p, [slot.id]: null})); }} 
+                                        style={{ position: 'absolute', top: 12, right: 12, background: 'rgba(255,255,255,0.9)', border: 'none', padding: 8, borderRadius: 10, color: '#ef4444' }}
+                                    >
+                                        <X size={18}/>
+                                    </button>
+                                </>
+                            ) : (
+                                <>
+                                    <div style={{ color: '#cbd5e1', marginBottom: 12 }}>{React.cloneElement(slot.icon, { size: 44 })}</div>
+                                    <div style={{ fontSize: '24px', fontWeight: 900, color: '#111827' }}>{slot.name}</div>
+                                    <div style={{ fontSize: '15px', color: '#94a3b8', fontWeight: 800 }}>{slot.desc} Focus</div>
+                                </>
+                            )}
+                        </div>
+                    ))}
+                </div>
+
+                <div style={{ display: 'flex', gap: '16px' }}>
+                    <button 
+                        onClick={() => handleStartAnalysis('multi')}
+                        disabled={Object.values(specializedFiles).filter(f => f).length === 0 || isAnalyzing}
+                        style={{
+                            flex: 1, height: '76px', border: 'none', borderRadius: '24px',
+                            background: Object.values(specializedFiles).filter(f => f).length > 0 ? 'linear-gradient(135deg, #1a56db, #2563eb)' : '#f1f5f9',
+                            color: '#fff', fontSize: '28px', fontWeight: 900, cursor: 'pointer',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '16px',
+                            boxShadow: '0 12px 32px rgba(26,86,219,0.2)', transition: '0.3s'
+                        }}
+                    >
+                        {isAnalyzing ? <Activity className="animate-spin" size={32} /> : <Layers size={24} />}
+                        {isAnalyzing ? "Processing Fusion..." : "Launch Multi-Source Diagnostic Fusion"}
+                    </button>
+                    <button 
+                        onClick={() => setSpecializedFiles({ eye: null, palm: null, retina: null, skin: null })}
+                        style={{ padding: '0 32px', borderRadius: '24px', border: '2px solid #e2e8f0', background: '#fff', color: '#64748b', fontWeight: 800, fontSize: '18px', cursor: 'pointer' }}
+                    >
+                        Reset Fusion
+                    </button>
                 </div>
             </div>
 

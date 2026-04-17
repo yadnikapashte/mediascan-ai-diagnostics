@@ -12,8 +12,10 @@ import {
   Globe, 
   Check,
   TrendingUp,
-  Activity
+  Activity,
+  Droplet
 } from 'lucide-react';
+import { predictionsAPI } from '../utils/api';
 import { useAuth } from '../context/AuthContext';
 import { useTranslation } from 'react-i18next';
 
@@ -23,7 +25,10 @@ const Layout = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([]);
   const dropdownRef = useRef(null);
+  const notifRef = useRef(null);
 
   // Language state
   const [currentLang, setCurrentLang] = useState(() => 
@@ -48,9 +53,26 @@ const Layout = () => {
   const adminNav = { name: t('sidebar.admin'), path: '/admin', icon: <ShieldAlert /> };
 
   useEffect(() => {
+    const fetchNotifications = async () => {
+      try {
+        const res = await predictionsAPI.getHistory(1, 5);
+        setNotifications(res.data.predictions || []);
+      } catch (err) {
+        console.error("Notification sync failed", err);
+      }
+    };
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 60000); // Polling every minute
+    return () => clearInterval(interval);
+  }, []);
+
+  useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setIsLangOpen(false);
+      }
+      if (notifRef.current && !notifRef.current.contains(event.target)) {
+        setIsNotifOpen(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -259,13 +281,79 @@ const Layout = () => {
               )}
             </div>
 
-            <button style={{
-              width: '52px', height: '52px', borderRadius: '16px', border: '1px solid #e2e8f0',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff',
-              color: '#64748b', cursor: 'pointer', transition: 'all 0.3s'
-            }}>
-              <Bell size={24} />
-            </button>
+            <div style={{ position: 'relative' }} ref={notifRef}>
+              <button 
+                onClick={() => setIsNotifOpen(!isNotifOpen)}
+                style={{
+                  width: '52px', height: '52px', borderRadius: '16px', border: '1px solid #e2e8f0',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#fff',
+                  color: isNotifOpen ? '#1a56db' : '#64748b', cursor: 'pointer', transition: 'all 0.3s',
+                  position: 'relative'
+                }}
+              >
+                <Bell size={24} strokeWidth={isNotifOpen ? 3 : 2} />
+                {notifications.length > 0 && (
+                  <span style={{
+                    position: 'absolute', top: '12px', right: '12px', width: '12px', height: '12px',
+                    background: '#ef4444', borderRadius: '50%', border: '2px solid #fff'
+                  }} />
+                )}
+              </button>
+
+              {isNotifOpen && (
+                <div style={{
+                  position: 'absolute', top: '115%', right: 0, width: '420px',
+                  background: '#fff', border: '1px solid #e2e8f0', borderRadius: '24px',
+                  boxShadow: '0 20px 40px rgba(0,0,0,0.12)', padding: '24px', zIndex: 200,
+                  animation: 'fadeIn 0.2s ease-out'
+                }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+                    <h3 style={{ fontSize: '24px', fontWeight: 900, color: '#111827', fontFamily: "'Outfit', sans-serif" }}>Recent Activity</h3>
+                    <Link to="/history" onClick={() => setIsNotifOpen(false)} style={{ fontSize: '18px', fontWeight: 800, color: '#1a56db', textDecoration: 'none' }}>View All</Link>
+                  </div>
+
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {notifications.length > 0 ? notifications.map((notif) => (
+                      <Link 
+                        key={notif.id} 
+                        to={`/results/${notif.id}`}
+                        onClick={() => setIsNotifOpen(false)}
+                        style={{
+                          display: 'flex', alignItems: 'center', gap: '16px', padding: '16px',
+                          borderRadius: '16px', textDecoration: 'none', background: '#f8fafc',
+                          transition: '0.2s', border: '1px solid transparent'
+                        }}
+                        onMouseOver={(e) => { e.currentTarget.style.borderColor = '#1a56db'; e.currentTarget.style.background = '#eff6ff'; }}
+                        onMouseOut={(e) => { e.currentTarget.style.borderColor = 'transparent'; e.currentTarget.style.background = '#f8fafc'; }}
+                      >
+                        <div style={{
+                          width: '48px', height: '48px', borderRadius: '12px', background: '#fff',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1a56db',
+                          boxShadow: '0 4px 6px rgba(0,0,0,0.02)'
+                        }}>
+                          {notif.model_type === 'eye' && <Activity size={20} />}
+                          {notif.model_type === 'palm' && <Droplet size={20} />}
+                          {notif.model_type === 'retina' && <Activity size={20} />}
+                          {notif.model_type === 'skin' && <Activity size={20} />}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: '18px', fontWeight: 800, color: '#1e293b' }}>
+                            {notif.primary_diagnosis} Update
+                          </div>
+                          <div style={{ fontSize: '16px', color: '#64748b', fontWeight: 500 }}>
+                            Result: <span style={{ fontWeight: 800, color: notif.primary_risk_level === 'high' ? '#dc2626' : '#059669' }}>{notif.primary_status}</span>
+                          </div>
+                        </div>
+                      </Link>
+                    )) : (
+                      <div style={{ padding: '40px 0', textAlign: 'center', color: '#94a3b8' }}>
+                        No recent notifications.
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             <div style={{ display: 'flex', alignItems: 'center', gap: '20px', paddingLeft: '32px', borderLeft: '1px solid #e2e8f0' }}>
               <div style={{ textAlign: 'right' }}>

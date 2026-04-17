@@ -31,7 +31,7 @@ const HistoryPage = () => {
     useEffect(() => {
         const fetchHistory = async () => {
             try {
-                const res = await predictionsAPI.getHistory();
+                const res = await predictionsAPI.getHistory(1, 100);
                 setScans(res.data.predictions || []);
             } catch (err) {
                 console.error("Clinical history retrieval failed", err);

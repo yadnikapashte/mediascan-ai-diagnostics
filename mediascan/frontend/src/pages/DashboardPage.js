@@ -50,8 +50,14 @@ const DashboardPage = () => {
     useEffect(() => {
         const fetchDashboardData = async () => {
             try {
-                const res = await predictionsAPI.getHistory();
-                const history = res.data.predictions || [];
+                // Fetch stats for accurate totals and trends, and history only for recent activity
+                const [statsRes, historyRes] = await Promise.all([
+                    predictionsAPI.getStats(),
+                    predictionsAPI.getHistory(1, 10)
+                ]);
+                
+                const statsData = statsRes.data;
+                const history = historyRes.data.predictions || [];
                 
                 // Authoritative Mutual Exclusivity: Group by Primary Focus
                 const anemiaCount = history.filter(p => p.primary_diagnosis === 'Anemia' && p.primary_status === 'Anemic').length;
@@ -83,13 +89,13 @@ const DashboardPage = () => {
                 };
 
                 setStats({
-                    total: history.length,
-                    anemic: anemiaCount,
-                    diabetic: diabetesCount,
-                    dfu: dfuCount,
-                    healthy: history.length - (anemiaCount + diabetesCount + dfuCount),
+                    total: statsData.total_scans,
+                    anemic: statsData.anemia_detected,
+                    diabetic: statsData.diabetes_detected,
+                    dfu: statsData.dfu_detected,
+                    healthy: statsData.healthy_cases,
                     recent: history.slice(0, 3),
-                    trends: trendData,
+                    trends: statsData.trends || [],
                     risks: {
                         anemia: getRiskStatus(aCount10),
                         diabetes: getRiskStatus(dCount10)
