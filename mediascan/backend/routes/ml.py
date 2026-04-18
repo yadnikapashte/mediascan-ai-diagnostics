@@ -136,15 +136,19 @@ def generate_gradcam():
             'skin': predict_skin_dfu
         }
         
-        predict_func = model_map.get(model_type, predict_eye_anemia)
+        grad_path = os.path.join('uploads/gradcam', f"grad_{int(time.time())}_{filename}")
+        
+        predict_func = predictors.get(model_type, predict_eye_anemia)
         res = predict_func(temp_path, grad_path)
         
         if res.get('status') == 'failed':
             return jsonify({'error': res.get('error')}), 500
 
         # Read the generated gradcam image
-        with open(grad_path, "rb") as image_file:
-            gradcam_base64 = f"data:image/jpeg;base64,{base64.b64encode(image_file.read()).decode('utf-8')}"
+        gradcam_base64 = None
+        if os.path.exists(grad_path):
+            with open(grad_path, "rb") as image_file:
+                gradcam_base64 = f"data:image/jpeg;base64,{base64.b64encode(image_file.read()).decode('utf-8')}"
         
         with open(temp_path, "rb") as image_file:
             original_base64 = f"data:image/jpeg;base64,{base64.b64encode(image_file.read()).decode('utf-8')}"
@@ -163,3 +167,5 @@ def generate_gradcam():
     finally:
         if os.path.exists(temp_path):
             os.remove(temp_path)
+        if 'grad_path' in locals() and os.path.exists(grad_path):
+            os.remove(grad_path)
