@@ -1,31 +1,51 @@
 """
-SQLAlchemy Models for MediScan AI
-Integrated with Supabase (PostgreSQL)
+SQLAlchemy Models for MediScan AI.
+Supports both SQLite (local dev / tests) and PostgreSQL (production via Supabase).
 """
 
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 import json
+import logging
 from werkzeug.security import generate_password_hash
+from sqlalchemy import text, inspect, event
+from sqlalchemy.engine import Engine
+import sqlite3
 
-from sqlalchemy import text
+logger = logging.getLogger(__name__)
+
+def hash_password(password):
+    try:
+        return generate_password_hash(password)
+    except (AttributeError, ValueError):
+        return generate_password_hash(password, method="pbkdf2:sha256")
+
 
 db = SQLAlchemy()
+
+
+# Enable WAL mode for SQLite (improves concurrent reads; no-op on Postgres)
+@event.listens_for(Engine, "connect")
+def _set_sqlite_pragma(dbapi_connection, connection_record):
+    if isinstance(dbapi_connection, sqlite3.Connection):
+        cursor = dbapi_connection.cursor()
+        cursor.execute("PRAGMA journal_mode=WAL")
+        cursor.close()
 
 class User(db.Model):
     __tablename__ = 'users'
     
-    id = db.Column(db.Integer, db.Identity(), primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
     password_hash = db.Column(db.String(256), nullable=False)
-    role = db.Column(db.String(20), default='user')
+    role = db.Column(db.String(20), default="user", server_default="user")
     age = db.Column(db.Integer, nullable=True)
     gender = db.Column(db.String(20), nullable=True)
     phone = db.Column(db.String(20), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     last_login = db.Column(db.DateTime, nullable=True)
-    is_active = db.Column(db.Boolean, default=True)
+    is_active = db.Column(db.Boolean, default=True, server_default="true")
     
     # Relationships
     predictions = db.relationship('Prediction', backref='user', lazy=True, cascade="all, delete-orphan")
@@ -47,8 +67,8 @@ class User(db.Model):
 class Prediction(db.Model):
     __tablename__ = 'predictions'
     
-    id = db.Column(db.Integer, db.Identity(), primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
     session_id = db.Column(db.String(64), nullable=False)
     
     # Image Paths
@@ -230,35 +250,29 @@ class Prediction(db.Model):
         return data
 
 def init_db(app):
+    """
+    Idempotent startup database initialization.
+    Schema management is handled by Flask-Migrate (Alembic).
+    Seeds the initial admin user if the users table exists and admin is missing.
+    """
     with app.app_context():
-        # 1. Standard schema creation
-        db.create_all()
-        
-        # 2. Migration: Add model_type column if it doesn't exist
         try:
-            db.session.execute(text("ALTER TABLE predictions ADD COLUMN IF NOT EXISTS model_type VARCHAR(20) DEFAULT 'fusion'"))
-            db.session.commit()
+            insp = inspect(db.engine)
+            if insp.has_table("users"):
+                admin = User.query.filter_by(email="admin@mediascan.ai").first()
+                if not admin:
+                    admin = User(
+                        name="Systems Administrator",
+                        email="admin@mediascan.ai",
+                        password_hash=hash_password("Admin@123"),
+                        role="admin",
+                        is_active=True
+                    )
+                    db.session.add(admin)
+                    db.session.commit()
+                    logger.info("Admin user seeded: admin@mediascan.ai")
+            else:
+                logger.info("Database tables not found yet. Run 'flask db upgrade' to apply migrations.")
         except Exception as e:
             db.session.rollback()
-            print(f"Migration note (model_type): {e}")
-            
-        # 3. Migration: Add status column if it doesn't exist
-        try:
-            db.session.execute(text("ALTER TABLE predictions ADD COLUMN IF NOT EXISTS status VARCHAR(20) DEFAULT 'completed'"))
-            db.session.commit()
-        except Exception as e:
-            db.session.rollback()
-            print(f"Migration note (status): {e}")
-
-        # 4. Seed admin user if not exists
-        admin = User.query.filter_by(email='admin@mediascan.ai').first()
-        if not admin:
-            admin = User(
-                name='Systems Administrator',
-                email='admin@mediascan.ai',
-                password_hash=generate_password_hash('Admin@123'),
-                role='admin'
-            )
-            db.session.add(admin)
-            db.session.commit()
-            print("Admin user created: admin@mediascan.ai / Admin@123")
+            logger.warning(f"Database initialization/seeding skipped: {e}")
